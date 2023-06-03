@@ -1,0 +1,26 @@
+name: Build assets for distribution
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "resources/**"
+jobs:
+  build-dist:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install front-end dependencies
+        run: npm ci
+
+      - name: Compile assets
+        run: npm run build
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Build assets for distribution
+          file_pattern: "dist/*"
