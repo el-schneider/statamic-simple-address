@@ -13,10 +13,6 @@
     "statamic/cms": "^3.0|^4.0"
   },
   "extra": {
-    "download-dist": {
-      "url": "https://github.com/el-schneider/statamic-simple-address/releases/download/{$version}/dist.tar.gz",
-      "path": "resources/dist"
-    },
     "statamic": {
       "name": "Statamic Simple Address",
       "description": "A simple automcomplete dropdown for Statamic"
