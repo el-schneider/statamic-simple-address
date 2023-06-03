@@ -70,7 +70,7 @@ export default {
       }
     },
     search: debounce((loading, search, vm) => {
-      const { countries, language } = vm.config;
+      const { countries, language, exclude_fields } = vm.config;
 
       const options = {
         addressdetails: 1,
@@ -95,19 +95,20 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("data[0]:", data[0]);
-
           const options = data.map((item) => {
-            const fieldsToRemove = ["importance", "icon"];
-
-            fieldsToRemove.forEach((field) => {
-              delete item[field];
+            exclude_fields.forEach((field) => {
+              //check if field exists and remove it
+              if (item[field]) delete item[field];
             });
 
-            return {
-              label: item.display_name,
-              ...item,
-            };
+            for (const key in item.namedetails) {
+              //if key contains a colon remove it
+              if (key.indexOf(":") > -1) {
+                delete item.namedetails[key];
+              }
+            }
+
+            return item;
           });
 
           vm.options = options;
