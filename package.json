@@ -2,7 +2,9 @@
   "name": "statamic-simple-address",
   "version": "1.0.0",
   "description": "> Statamic Simple Address is a Statamic addon that does something pretty neat.",
+  "type": "module",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -15,6 +17,7 @@
   "license": "ISC",
   "devDependencies": {
     "@vitejs/plugin-vue2": "^2.2.0",
+    "laravel-vite-plugin": "^0.7.8",
     "vite": "^4.3.9",
     "vue": "^2.7.14"
   },

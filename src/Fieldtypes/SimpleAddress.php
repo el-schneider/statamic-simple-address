@@ -1,11 +1,37 @@
 <?php
 
-namespace App\Fieldtypes;
+namespace ElSchneider\StatamicSimpleAddress\Fieldtypes;
 
 use Statamic\Fields\Fieldtype;
 
 class SimpleAddress extends Fieldtype
 {
+    protected $icon = 'pin';
+
+    protected function configFieldItems(): array
+    {
+        return [
+            'placeholder' => [
+                'type' => 'text',
+                'display' => __('Placeholder'),
+                'default' => __('Start typing your address'),
+            ],
+            'countries' => [
+                'type' => 'taggable',
+                'display' => __('Countries'),
+                'instructions' => __('Change the countries to search in. Two letters country codes (ISO 3166-1 alpha-2). e.g. *gb* for the United Kingdom, *de* for Germany'),
+                'width' => 50,
+            ],
+            'language' => [
+                'type' => 'taggable',
+                'display' => __('Language'),
+                'instructions' => __('Preferred language order for showing search results, overrides the value specified in the "Accept-Language" HTTP header. Either use a standard RFC2616 accept-language string or a simple comma-separated list of language codes.'),
+                'width' => 50,
+                'default' => ['en'],
+            ],
+        ];
+    }
+
     /**
      * The blank/default value.
      *
