@@ -1,0 +1,19 @@
+{
+    "name": "el-schneider/statamic-simple-address",
+    "autoload": {
+        "psr-4": {
+            "ElSchneider\\StatamicSimpleAddress\\": "src"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Statamic Simple Address",
+            "description": "Statamic Simple Address addon"
+        },
+        "laravel": {
+            "providers": [
+                "ElSchneider\\StatamicSimpleAddress\\ServiceProvider"
+            ]
+        }
+    }
+}
