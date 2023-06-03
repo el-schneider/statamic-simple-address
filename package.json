@@ -1,20 +1,17 @@
 {
   "name": "statamic-simple-address",
-  "version": "1.0.0",
-  "description": "> Statamic Simple Address is a Statamic addon that does something pretty neat.",
+  "license": "MIT",
+  "version": "0.0.1",
+  "description": "Statamic Simple Address Autocomplete Field",
   "type": "module",
   "main": "index.js",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@vitejs/plugin-vue2": "^2.2.0",
     "laravel-vite-plugin": "^0.7.8",

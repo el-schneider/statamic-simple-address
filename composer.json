@@ -1,19 +1,32 @@
 {
-    "name": "el-schneider/statamic-simple-address",
-    "autoload": {
-        "psr-4": {
-            "ElSchneider\\StatamicSimpleAddress\\": "src"
-        }
-    },
-    "extra": {
-        "statamic": {
-            "name": "Statamic Simple Address",
-            "description": "Statamic Simple Address addon"
-        },
-        "laravel": {
-            "providers": [
-                "ElSchneider\\StatamicSimpleAddress\\ServiceProvider"
-            ]
-        }
+  "name": "el-schneider/statamic-simple-address",
+  "description": "A simple automcomplete dropdown for Statamic",
+  "license": "MIT",
+  "version": "0.0.1",
+  "type": "statamic-addon",
+  "autoload": {
+    "psr-4": {
+      "ElSchneider\\StatamicSimpleAddress\\": "src"
     }
+  },
+  "require": {
+    "php": "^8.0",
+    "statamic/cms": "^3.0|^4.0",
+    "pixelfear/composer-dist-plugin": "dev-master"
+  },
+  "extra": {
+    "download-dist": {
+      "url": "https://github.com/el-schneider/statamic-simple-address/releases/download/{$version}/dist.tar.gz",
+      "path": "resources/dist"
+    },
+    "statamic": {
+      "name": "Statamic Simple Address",
+      "description": "A simple automcomplete dropdown for Statamic"
+    },
+    "laravel": {
+      "providers": [
+        "ElSchneider\\StatamicSimpleAddress\\ServiceProvider"
+      ]
+    }
+  }
 }
