@@ -14,7 +14,7 @@ class SimpleAddress extends Fieldtype
             'placeholder' => [
                 'type' => 'text',
                 'display' => __('Placeholder'),
-                'default' => __('Start typing your address'),
+                'default' => __('Start typing …'),
             ],
             'countries' => [
                 'type' => 'taggable',
@@ -25,7 +25,7 @@ class SimpleAddress extends Fieldtype
             'language' => [
                 'type' => 'taggable',
                 'display' => __('Language'),
-                'instructions' => __('Preferred language order for showing search results, overrides the value specified in the "Accept-Language" HTTP header. Either use a standard RFC2616 (e.g. en, de-CH, en-US) accept-language string or a simple comma-separated list of language codes.'),
+                'instructions' => __('Preferred language order for showing search results. Either use a standard RFC2616 (e.g. **en**, **de-CH**, **en-US**) accept-language string or a simple comma-separated list of language codes.'),
                 'width' => 50,
                 'default' => ['en'],
             ],
@@ -34,7 +34,7 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Exclude Fields'),
                 'instructions' => __('Exlude fields from being saved, to keep things **simple**.'),
                 'width' => 50,
-                'default' => ['boundingbox', 'class', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
+                'default' => ['boundingbox', 'class', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
             ],
         ];
     }

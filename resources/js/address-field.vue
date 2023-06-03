@@ -1,26 +1,24 @@
 <template>
   <div>
+    <div x-text="loading"></div>
     <v-select
+      ref="select"
       :value="value"
       :filterable="false"
       :options="options"
       :placeholder="config.placeholder"
       @search="onSearch"
       @input="setSelected"
+      :noDrop="!options.length"
     >
-      <template slot="no-options">
-        <div class="py-2 text-grey-60">
-          <p>Start typing address...</p>
-        </div>
-      </template>
       <template slot="option" slot-scope="option">
         <div class="d-center">
-          {{ option.display_name }}
+          {{ option.label }}
         </div>
       </template>
       <template slot="selected-option" slot-scope="option">
         <div class="selected d-center">
-          {{ option.display_name }}
+          {{ option.label }}
         </div>
       </template>
     </v-select>
@@ -95,7 +93,9 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          const options = data.map((item) => {
+          const options = data.map((_item) => {
+            const item = { label: _item.display_name, ..._item };
+
             exclude_fields.forEach((field) => {
               //check if field exists and remove it
               if (item[field]) delete item[field];
