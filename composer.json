@@ -2,7 +2,6 @@
   "name": "el-schneider/statamic-simple-address",
   "description": "A simple automcomplete dropdown for Statamic",
   "license": "MIT",
-  "version": "0.0.1",
   "type": "statamic-addon",
   "autoload": {
     "psr-4": {
