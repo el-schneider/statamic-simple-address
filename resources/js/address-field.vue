@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div x-text="loading"></div>
     <v-select
       ref="select"
       :value="value"
       :filterable="false"
       :options="options"
       :placeholder="config.placeholder"
+      append-to-body
       @search="onSearch"
       @input="setSelected"
       :noDrop="!options.length"
