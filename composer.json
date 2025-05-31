@@ -1,6 +1,6 @@
 {
   "name": "el-schneider/statamic-simple-address",
-  "description": "A simple automcomplete dropdown for Statamic",
+  "description": "A simple address automcomplete for Statamic",
   "license": "MIT",
   "type": "statamic-addon",
   "autoload": {
@@ -9,13 +9,13 @@
     }
   },
   "require": {
-    "php": "^8.0",
-    "statamic/cms": "^3.0|^4.0"
+    "php": "^8.2",
+    "statamic/cms": "^3.0|^4.0|^5.0"
   },
   "extra": {
     "statamic": {
       "name": "Statamic Simple Address",
-      "description": "A simple automcomplete dropdown for Statamic"
+      "description": "A simple address automcomplete for Statamic"
     },
     "laravel": {
       "providers": [
@@ -27,5 +27,8 @@
     "allow-plugins": {
       "pixelfear/composer-dist-plugin": true
     }
+  },
+  "require-dev": {
+    "laravel/pint": "^1.22"
   }
 }

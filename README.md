@@ -9,25 +9,25 @@ Statamic Simple Address does what is says. It gives you an address autocomplete 
 
 ```yaml
 simple_address_field:
-  label: "City of London, Greater London, England, United Kingdom"
-  lat: "51.5156177"
-  lon: "-0.0919983"
-  display_name: "City of London, Greater London, England, United Kingdom"
+  label: 'City of London, Greater London, England, United Kingdom'
+  lat: '51.5156177'
+  lon: '-0.0919983'
+  display_name: 'City of London, Greater London, England, United Kingdom'
   type: administrative
   address:
-    city: "City of London"
+    city: 'City of London'
     ISO3166-2-lvl6: GB-LND
-    state_district: "Greater London"
+    state_district: 'Greater London'
     state: England
     ISO3166-2-lvl4: GB-ENG
-    country: "United Kingdom"
+    country: 'United Kingdom'
     country_code: gb
   namedetails:
-    name: "City of London"
-    alt_name: "The City"
+    name: 'City of London'
+    alt_name: 'The City'
     ISO3166-2: GB-LND
     short_name: London
-    official_name: "City and County of the City of London"
+    official_name: 'City and County of the City of London'
 ```
 
 ## Thanks to
