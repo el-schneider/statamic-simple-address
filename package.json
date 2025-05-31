@@ -7,19 +7,34 @@
   "main": "index.js",
   "private": true,
   "scripts": {
+    "build": "vite build",
+    "build:publish": "npm run build && rm -rf ../../../public/vendor/statamic-simple-address && php ../../../artisan vendor:publish --tag=statamic-simple-address --force",
+    "check": "npm run format:check && npm run eslint:check && npm run pint:check",
     "dev": "vite",
-    "build": "vite build"
+    "eslint:check": "eslint .",
+    "eslint:fix": "eslint . --fix",
+    "fix": "npm run format:fix && npm run eslint:fix && npm run pint:fix",
+    "format:check": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "pint:check": "./vendor/bin/pint --test",
+    "pint:fix": "./vendor/bin/pint",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@vitejs/plugin-vue2": "^2.2.0",
-    "laravel-vite-plugin": "^0.7.8",
-    "vite": "^4.3.9",
+    "@vitejs/plugin-vue2": "^2.3.3",
+    "eslint": "^9.28.0",
+    "eslint-plugin-vue": "^9.30.0",
+    "globals": "^15.13.0",
+    "laravel-vite-plugin": "^1.2.0",
+    "prettier": "^3.5.3",
+    "vite": "^6.3.5",
     "vue": "^2.7.14"
   },
   "dependencies": {
+    "husky": "^9.1.7",
     "lodash.debounce": "^4.0.8",
-    "vue-select": "^3.20.2"
+    "vue-select": "^3.20.4"
   }
 }

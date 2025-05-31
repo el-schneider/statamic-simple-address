@@ -1,17 +1,23 @@
 name: Build assets for distribution
+
 on:
   push:
     branches:
       - main
     paths:
-      - "resources/**"
+      - 'resources/**'
+      - 'tailwind.config.js'
+      - 'vite.config.js'
+      - 'postcss.config.js'
 jobs:
   build-dist:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install front-end dependencies
         run: npm ci
@@ -20,7 +26,7 @@ jobs:
         run: npm run build
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Build assets for distribution
-          file_pattern: "dist/*"
+          file_pattern: 'resources/dist/*'

@@ -7,9 +7,9 @@
       :options="options"
       :placeholder="config.placeholder"
       append-to-body
+      :no-drop="!options.length"
       @search="onSearch"
       @input="setSelected"
-      :noDrop="!options.length"
     >
       <template slot="option" slot-scope="option">
         <div class="d-center">
@@ -26,17 +26,17 @@
 </template>
 
 <script>
-import vSelect from "vue-select";
-import debounce from "lodash.debounce";
+import vSelect from 'vue-select'
+import debounce from 'lodash.debounce'
 
 // TODO: Figure out how to remove this stuff...
 vSelect.props.components.default = () => ({
   Deselect: {
-    render: (createElement) => createElement("span", __("×")),
+    render: (createElement) => createElement('span', __('×')),
   },
   OpenIndicator: {
     render: (createElement) =>
-      createElement("span", {
+      createElement('span', {
         class: { toggle: true },
         domProps: {
           innerHTML:
@@ -44,80 +44,79 @@ vSelect.props.components.default = () => ({
         },
       }),
   },
-});
+})
 
 export default {
-  mixins: [Fieldtype],
-
   components: {
     vSelect,
   },
+  mixins: [Fieldtype],
   data() {
     return {
       options: [],
-    };
+    }
   },
   methods: {
     setSelected(value) {
-      this.update(value);
+      this.update(value)
     },
     onSearch(search, loading) {
       if (search.length) {
-        loading(true);
-        this.search(loading, search, this);
+        loading(true)
+        this.search(loading, search, this)
       }
     },
     search: debounce((loading, search, vm) => {
-      const { countries, language, exclude_fields } = vm.config;
+      const { countries, language, exclude_fields } = vm.config
 
       const options = {
         addressdetails: 1,
         namedetails: 1,
-        format: "json",
-        "accept-language": language || "en",
-      };
-
-      if (countries) {
-        options.countrycodes = countries.join(",");
+        format: 'json',
+        'accept-language': language || 'en',
       }
 
-      const params = new URLSearchParams(options);
+      if (countries) {
+        options.countrycodes = countries.join(',')
+      }
 
-      const url = `https://nominatim.openstreetmap.org/search?${params}&q=${search}`;
+      const params = new URLSearchParams(options)
+
+      const url = `https://nominatim.openstreetmap.org/search?${params}&q=${search}`
 
       fetch(url, {
         headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Content-Type": "application/json",
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
         },
       })
         .then((response) => response.json())
         .then((data) => {
           const options = data.map((_item) => {
-            const item = { label: _item.display_name, ..._item };
+            const item = { label: _item.display_name, ..._item }
 
             exclude_fields.forEach((field) => {
               //check if field exists and remove it
-              if (item[field]) delete item[field];
-            });
+              if (item[field]) delete item[field]
+            })
 
             for (const key in item.namedetails) {
               //if key contains a colon remove it
-              if (key.indexOf(":") > -1) {
-                delete item.namedetails[key];
+              if (key.indexOf(':') > -1) {
+                delete item.namedetails[key]
               }
             }
 
-            return item;
-          });
+            return item
+          })
 
-          vm.options = options;
+          vm.options = options
         })
         .catch((error) => console.error(error))
         .finally(() => {
-          loading(false);
-        });
+          loading(false)
+        })
     }, 300),
   },
-};
+}
 </script>

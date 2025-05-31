@@ -1,0 +1,39 @@
+/*
+ *   More Info:
+ *   https://www.totaltypescript.com/tsconfig-cheat-sheet#transpiling-with-typescript
+ *   https://code.visualstudio.com/docs/languages/jsconfig
+ */
+{
+  "compilerOptions": {
+    /* Base Options */
+    "target": "ES2022", // Specifies ECMAScript target version: modern features with broad browser compatibility
+    "module": "preserve", // preserves import/export syntax for Vite to handle, implies "moduleResolution": "bundler"
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // Defines available API types - includes both JS and browser DOM features
+    "esModuleInterop": true, // Improves compatibility between CommonJS and ES modules
+    "resolveJsonModule": true, // Allows importing JSON files directly as objects
+    "moduleDetection": "force", // Treats all files as modules, prevents 'cannot redeclare' errors
+    "skipLibCheck": true, // Skips type checking of node_modules for better performance
+    "useDefineForClassFields": true, // Uses modern class field semantics for public/private fields
+    "verbatimModuleSyntax": true, // Enforces use of import type/export type for cleaner code
+
+    /* Bundler mode */
+    "isolatedModules": true, // Ensures files are compatible with separate processing
+    "noEmit": true, // Prevents output generation since Vite handles building
+
+    /* Path Resolution */
+    "baseUrl": ".", // Sets the root directory for non-relative imports
+    "paths": {
+      // Configures import path aliases for cleaner imports
+      "@/*": ["resources/js/*"]
+    },
+
+    /* Linting */
+    "checkJs": true, // Enables type checking in JavaScript files
+    "strict": true, // Enables all recommended type-checking options
+    "noUncheckedIndexedAccess": true, // Requires checking if array/object indexes exist before access
+
+    /* Types */
+    "types": ["vite/client"] // Includes Vite-specific types for IDE support
+  },
+  "exclude": ["node_modules", "public", "vendor"] // Directories to exclude for better performance
+}

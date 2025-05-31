@@ -1,7 +1,5 @@
-import AddressField from "./address-field.vue";
+import AddressField from './address-field.vue'
 
 Statamic.booting(() => {
-    Statamic.$components.register("simple_address-fieldtype", AddressField);
-});
-
-
+  Statamic.$components.register('simple_address-fieldtype', AddressField)
+})
