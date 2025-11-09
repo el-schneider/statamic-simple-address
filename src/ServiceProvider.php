@@ -17,4 +17,13 @@ class ServiceProvider extends AddonServiceProvider
         ],
         'publicDirectory' => 'resources/dist',
     ];
+
+    public function boot()
+    {
+        parent::boot();
+
+        $this->publishes([
+            __DIR__.'/../config/simple-address.php' => config_path('simple-address.php'),
+        ], 'simple-address-config');
+    }
 }
