@@ -27,7 +27,7 @@
 
 <script>
 import vSelect from 'vue-select'
-import debounce from 'lodash.debounce'
+import debounce from './utils/debounce'
 
 // Constants
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search'
