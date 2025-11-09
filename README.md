@@ -1,19 +1,12 @@
 # Statamic Simple Address
 
-Statamic Simple Address does what is says. It gives you an address autocomplete with simplicity in mind.
+Address autocomplete fieldtype for Statamic. Works out of the box with no API keys or configuration needed.
 
-- It uses the Open Source [Nominatim](https://nominatim.org/) geocoding service, so there is no need to set-up an API-Key.
-- It also strips a lot of fields from the API by default, as it tries to keep things simple
+## Getting Started
 
-## ⚠️ Important: Nominatim Usage Policy Compliance
+Add a Simple Address field to your fieldtype. That's it. It uses Nominatim (free, open-source OpenStreetMap data) by default.
 
-**By using this addon, you are responsible for complying with the [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/). The author of this addon cannot and does not take any liability for policy violations.**
-
-Please review the full policy for requirements on rate limiting, attribution, appropriate use, and data extraction limitations.
-
-**For commercial applications or high-volume usage, consider using [commercial providers](https://wiki.openstreetmap.org/wiki/Nominatim#Alternatives_.2F_Third-party_providers) or [running your own Nominatim instance](https://nominatim.org/release-docs/latest/admin/Installation/).**
-
-## Data
+The field stores essential address information:
 
 ```yaml
 simple_address_field:
@@ -22,41 +15,37 @@ simple_address_field:
   lon: '-0.0919983'
   display_name: 'City of London, Greater London, England, United Kingdom'
   type: administrative
-  address:
-    city: 'City of London'
-    ISO3166-2-lvl6: GB-LND
-    state_district: 'Greater London'
-    state: England
-    ISO3166-2-lvl4: GB-ENG
-    country: 'United Kingdom'
-    country_code: gb
-  namedetails:
-    name: 'City of London'
-    alt_name: 'The City'
-    ISO3166-2: GB-LND
-    short_name: London
-    official_name: 'City and County of the City of London'
+  address: { ... }
+  namedetails: { ... }
 ```
 
-## Configuration
+## Nominatim Usage Policy
 
-The field supports several configuration options:
+Since Nominatim is the default provider, be aware of these requirements:
 
-- **Placeholder**: Custom placeholder text for the search input
-- **Countries**: Limit searches to specific countries (ISO 3166-1 alpha-2 codes)
-- **Language**: Preferred language for search results (RFC2616 format)
-- **Debounce Delay**: Search delay in milliseconds (minimum 1000ms for policy compliance)
-- **Exclude Fields**: Fields to exclude from saved data
+- **Rate limit**: 1 request per second (set debounce delay ≥ 1000ms in field config)
+- **User-Agent**: Configure a User-Agent header identifying your application
+- **Attribution**: Display OpenStreetMap attribution
 
-## License & Attribution
+See [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) for full details.
 
-This addon uses data from OpenStreetMap via the Nominatim service. You must comply with:
+## Using Different Providers
 
-- [OpenStreetMap Copyright](https://www.openstreetmap.org/copyright)
-- [ODbL License](https://opendatacommons.org/licenses/odbl/)
-- [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/)
+To switch providers or customize endpoints, publish the config:
+
+```bash
+php artisan vendor:publish --tag=simple-address-config
+```
+
+Edit `config/simple-address.php` to:
+
+- **Switch globally**: Set `default_provider` or `SIMPLE_ADDRESS_PROVIDER` env var
+- **Override per field**: Choose a different provider in the field configuration UI
+- **Add custom providers**: Define new providers in the config file
+
+Built-in providers: Nominatim, Geoapify, Geocodify. See the config file for examples of adding custom providers.
 
 ## Thanks to
 
-- [Matt Rothenberg](https://github.com/mattrothenberg) for his work on [Statamic Mapbox Address](https://github.com/mattrothenberg/statamic-mapbox-address)
-- [Nominatim](https://nominatim.org/) for their great service
+- [Matt Rothenberg](https://github.com/mattrothenberg) for [Statamic Mapbox Address](https://github.com/mattrothenberg/statamic-mapbox-address)
+- [Nominatim](https://nominatim.org/) team
