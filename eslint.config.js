@@ -21,5 +21,9 @@ export default defineConfig([
         Fieldtype: 'readonly',
       },
     },
+    rules: {
+      'vue/no-side-effects-in-computed-properties': 'off',
+      'vue/no-use-computed-property-like-method': 'off',
+    },
   },
 ])

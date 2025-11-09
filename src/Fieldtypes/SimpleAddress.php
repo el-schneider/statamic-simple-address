@@ -29,10 +29,20 @@ class SimpleAddress extends Fieldtype
                 'width' => 50,
                 'default' => ['en'],
             ],
+            'debounce_delay' => [
+                'type' => 'integer',
+                'display' => __('Search Debounce Delay'),
+                'instructions' => __('Delay in milliseconds before triggering the search. **Must be at least 1000ms (1 second) to comply with [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) which allows a maximum of 1 request per second.** Higher values reduce API calls but may feel less responsive.'),
+                'width' => 50,
+                'default' => 1000,
+                'min' => 100,
+                'max' => 2000,
+                'required' => true,
+            ],
             'exclude_fields' => [
                 'type' => 'taggable',
                 'display' => __('Exclude Fields'),
-                'instructions' => __('Exlude fields from being saved, to keep things **simple**.'),
+                'instructions' => __('Exclude fields from being saved, to keep things **simple**.'),
                 'width' => 50,
                 'default' => ['boundingbox', 'class', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
             ],
@@ -42,7 +52,7 @@ class SimpleAddress extends Fieldtype
     /**
      * The blank/default value.
      *
-     * @return array
+     * @return array|null
      */
     public function defaultValue()
     {
