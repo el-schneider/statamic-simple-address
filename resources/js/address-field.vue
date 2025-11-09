@@ -30,8 +30,8 @@ import vSelect from 'vue-select'
 import debounce from './utils/debounce'
 
 // Constants
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search'
 const DEFAULT_LANGUAGE = 'en'
+const DEFAULT_DEBOUNCE_DELAY = 1000
 
 export default {
   name: 'SimpleAddressField',
@@ -86,12 +86,13 @@ export default {
     },
 
     searchConfig() {
-      const { countries, language, exclude_fields, debounce_delay } = this.config
+      const { countries, language, exclude_fields, debounce_delay, provider_config } = this.config
       return {
         countries: countries || [],
         language: language || DEFAULT_LANGUAGE,
         excludeFields: exclude_fields || [],
-        debounceDelay: debounce_delay || 1000,
+        debounceDelay: debounce_delay || DEFAULT_DEBOUNCE_DELAY,
+        providerConfig: provider_config || {},
       }
     },
 
@@ -152,14 +153,22 @@ export default {
       return response.json()
     },
 
+    /**
+     * Build search URL with parameters from provider configuration
+     * @param {string} query - Search query
+     * @returns {string} Complete search URL
+     */
     buildSearchUrl(query) {
+      const { providerConfig } = this.searchConfig
       const { countries, language } = this.searchConfig
 
+      if (!providerConfig || !providerConfig.base_url) {
+        throw new Error('Provider configuration not properly loaded')
+      }
+
       const params = new URLSearchParams({
-        q: query,
-        addressdetails: '1',
-        namedetails: '1',
-        format: 'json',
+        [providerConfig.freeform_search_key]: query,
+        ...providerConfig.request_options,
         'accept-language': language,
       })
 
@@ -167,7 +176,12 @@ export default {
         params.set('countrycodes', countries.join(','))
       }
 
-      return `${NOMINATIM_BASE_URL}?${params}`
+      // Add API key if provider requires it
+      if (providerConfig.api_key && providerConfig.api_key_param_name) {
+        params.set(providerConfig.api_key_param_name, providerConfig.api_key)
+      }
+
+      return `${providerConfig.base_url}?${params}`
     },
 
     processSearchResults(data) {

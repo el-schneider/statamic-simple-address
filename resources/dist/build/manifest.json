@@ -1,8 +1,11 @@
 {
   "resources/js/simple-address.js": {
-    "file": "assets/simple-address-C27Khy6M.js",
+    "file": "assets/simple-address-2w9e1mWF.js",
     "name": "simple-address",
     "src": "resources/js/simple-address.js",
-    "isEntry": true
+    "isEntry": true,
+    "css": [
+      "assets/simple-address-BvZrZcnq.css"
+    ]
   }
 }
