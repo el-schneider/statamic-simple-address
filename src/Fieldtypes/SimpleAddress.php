@@ -65,6 +65,48 @@ class SimpleAddress extends Fieldtype
     }
 
     /**
+     * Get the active provider name for this field
+     */
+    protected function getActiveProvider(): string
+    {
+        // Use field-level config if set, otherwise use app default
+        if (! empty($this->config('provider'))) {
+            return $this->config('provider');
+        }
+
+        return config('simple-address.default_provider', 'nominatim');
+    }
+
+    /**
+     * Get the full configuration for the active provider
+     */
+    protected function getProviderConfig(): array
+    {
+        $provider = $this->getActiveProvider();
+        $config = config("simple-address.providers.{$provider}");
+
+        if (! $config) {
+            throw new \InvalidArgumentException(
+                "Geocoding provider '{$provider}' not found in simple-address config"
+            );
+        }
+
+        return $config;
+    }
+
+    /**
+     * Pre-process the fieldtype config before sending to the frontend
+     *
+     * @return array
+     */
+    public function preload()
+    {
+        return [
+            'provider_config' => $this->getProviderConfig(),
+        ];
+    }
+
+    /**
      * The blank/default value.
      *
      * @return array|null
