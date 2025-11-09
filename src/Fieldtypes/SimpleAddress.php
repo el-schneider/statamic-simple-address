@@ -22,6 +22,7 @@ class SimpleAddress extends Fieldtype
                 'instructions' => __('Choose the geocoding provider. Defaults to the app-wide setting if not specified.'),
                 'options' => array_combine($this->getAvailableProviders(), $this->getAvailableProviders()),
                 'width' => 50,
+                'default' => config('simple-address.default_provider', 'nominatim'),
             ],
             'countries' => [
                 'type' => 'taggable',
@@ -51,7 +52,7 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Exclude Fields'),
                 'instructions' => __('Exclude fields from being saved, to keep things **simple**.'),
                 'width' => 50,
-                'default' => ['boundingbox', 'class', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
+                'default' => ['boundingbox', 'bbox', 'class', 'datasource', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'other_names', 'place_id', 'rank'],
             ],
         ];
     }

@@ -27,6 +27,7 @@
 
 <script>
 import vSelect from 'vue-select'
+import { JSONPath } from 'jsonpath-plus'
 import debounce from './utils/debounce'
 
 // Constants
@@ -86,13 +87,16 @@ export default {
     },
 
     searchConfig() {
-      const { countries, language, exclude_fields, debounce_delay, provider_config } = this.config
+      const { countries, language, exclude_fields, debounce_delay } = this.config
+      const { provider_config } = this.meta
       return {
         countries: countries || [],
         language: language || DEFAULT_LANGUAGE,
         excludeFields: exclude_fields || [],
         debounceDelay: debounce_delay || DEFAULT_DEBOUNCE_DELAY,
         providerConfig: provider_config || {},
+        displayField: provider_config?.display_field || 'display_name',
+        resultsPath: provider_config?.results_path || '$[*]',
       }
     },
 
@@ -128,7 +132,8 @@ export default {
 
     async performSearch(loading, search) {
       try {
-        const results = await this.performAddressSearch(search)
+        const response = await this.performAddressSearch(search)
+        const results = this.extractResults(response)
         this.options = this.processSearchResults(results)
       } catch (error) {
         this.handleSearchError(error)
@@ -137,20 +142,81 @@ export default {
       }
     },
 
-    async performAddressSearch(query) {
-      const url = this.buildSearchUrl(query)
+    extractResults(response) {
+      const { resultsPath } = this.searchConfig
+      const results = JSONPath({ path: resultsPath, json: response })
+      return results
+    },
 
-      const response = await fetch(url, {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
+    async performAddressSearch(query) {
+      const { url, options } = this.buildSearchRequest(query)
+
+      const response = await fetch(url, options)
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`)
       }
 
       return response.json()
+    },
+
+    buildSearchRequest(query) {
+      const { providerConfig } = this.searchConfig
+      if (!providerConfig || !providerConfig.base_url) {
+        throw new Error('Provider configuration not properly loaded')
+      }
+
+      const useJsonBody = providerConfig.use_json_body || false
+
+      if (useJsonBody) {
+        return this.buildJsonBodyRequest(query, providerConfig)
+      }
+
+      return {
+        url: this.buildSearchUrl(query),
+        options: {
+          headers: {
+            Accept: 'application/json',
+          },
+        },
+      }
+    },
+
+    buildJsonBodyRequest(query, providerConfig) {
+      const { countries, language } = this.searchConfig
+
+      const body = {
+        [providerConfig.freeform_search_key]: query,
+        ...providerConfig.request_options,
+      }
+
+      if (language && language !== 'en') {
+        body.language = language
+      }
+
+      if (countries.length > 0) {
+        body.region_code = countries[0]
+      }
+
+      let url = providerConfig.base_url
+
+      // Add API key as query parameter
+      if (providerConfig.api_key && providerConfig.api_key_param_name) {
+        const separator = url.includes('?') ? '&' : '?'
+        url += `${separator}${providerConfig.api_key_param_name}=${encodeURIComponent(providerConfig.api_key)}`
+      }
+
+      return {
+        url,
+        options: {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(body),
+        },
+      }
     },
 
     /**
@@ -169,8 +235,12 @@ export default {
       const params = new URLSearchParams({
         [providerConfig.freeform_search_key]: query,
         ...providerConfig.request_options,
-        'accept-language': language,
       })
+
+      // Add accept-language header for providers that support it (not Google)
+      if (!providerConfig.use_json_body) {
+        params.set('accept-language', language)
+      }
 
       if (countries.length > 0) {
         params.set('countrycodes', countries.join(','))
@@ -190,7 +260,7 @@ export default {
 
     processSearchItem(item) {
       const processedItem = {
-        label: item.display_name,
+        label: item[this.searchConfig.displayField],
         ...item,
       }
 
