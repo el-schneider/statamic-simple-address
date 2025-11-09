@@ -16,6 +16,13 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Placeholder'),
                 'default' => __('Start typing …'),
             ],
+            'provider' => [
+                'type' => 'select',
+                'display' => __('Provider'),
+                'instructions' => __('Choose the geocoding provider. Defaults to the app-wide setting if not specified.'),
+                'options' => array_combine($this->getAvailableProviders(), $this->getAvailableProviders()),
+                'width' => 50,
+            ],
             'countries' => [
                 'type' => 'taggable',
                 'display' => __('Countries'),
@@ -47,6 +54,14 @@ class SimpleAddress extends Fieldtype
                 'default' => ['boundingbox', 'class', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
             ],
         ];
+    }
+
+    /**
+     * Get available geocoding providers
+     */
+    protected function getAvailableProviders(): array
+    {
+        return array_keys(config('simple-address.providers', []));
     }
 
     /**
