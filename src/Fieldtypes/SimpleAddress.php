@@ -47,12 +47,11 @@ class SimpleAddress extends Fieldtype
                 'max' => 2000,
                 'required' => true,
             ],
-            'exclude_fields' => [
+            'additional_exclude_fields' => [
                 'type' => 'taggable',
-                'display' => __('Exclude Fields'),
-                'instructions' => __('Exclude fields from being saved, to keep things **simple**.'),
+                'display' => __('Additional Exclude Fields'),
+                'instructions' => __('Exclude additional fields from being saved, beyond the default exclusions. This keeps the stored data **simple** by only keeping essential information.'),
                 'width' => 50,
-                'default' => ['boundingbox', 'bbox', 'class', 'datasource', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'other_names', 'place_id', 'rank'],
             ],
         ];
     }
@@ -102,8 +101,24 @@ class SimpleAddress extends Fieldtype
      */
     public function preload()
     {
+        $provider = $this->getActiveProvider();
+        $providerConfig = $this->getProviderConfig();
+
+        // Get default exclusions for this provider
+        $defaultExclusions = $providerConfig['default_exclude_fields'] ?? [];
+
+        // Get field-level additional exclusions
+        $fieldLevelExclusions = $this->config('additional_exclude_fields') ?? [];
+
+        // Merge them
+        $allExclusions = array_unique(array_merge($defaultExclusions, $fieldLevelExclusions));
+
         return [
-            'provider_config' => $this->getProviderConfig(),
+            'provider_config' => $providerConfig,
+            'provider' => $provider,
+            'default_exclude_fields' => $defaultExclusions,
+            'additional_exclude_fields' => $fieldLevelExclusions,
+            'all_exclude_fields' => $allExclusions,
         ];
     }
 
