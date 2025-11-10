@@ -21,6 +21,22 @@ return [
             ],
             'display_field' => 'display_name',
             'results_path' => '$[*]',
+            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\NominatimTransformer::class,
+            'default_exclude_fields' => [
+                'boundingbox',
+                'bbox',
+                'class',
+                'datasource',
+                'display_name',
+                'icon',
+                'importance',
+                'licence',
+                'osm_id',
+                'osm_type',
+                'other_names',
+                'place_id',
+                'rank',
+            ],
         ],
 
         'geoapify' => [
@@ -37,6 +53,14 @@ return [
             ],
             'display_field' => 'formatted',
             'results_path' => '$.results[*]',
+            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GeoapifyTransformer::class,
+            'default_exclude_fields' => [
+                'bbox',
+                'geometry',
+                'place_id',
+                'query',
+                'rank',
+            ],
         ],
 
         'geocodify' => [
@@ -53,6 +77,13 @@ return [
             ],
             'display_field' => 'label',
             'results_path' => '$.response.features[*].properties',
+            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GeocodifyTransformer::class,
+            'default_exclude_fields' => [
+                'bbox',
+                'geometry',
+                'id',
+                'rank',
+            ],
         ],
 
         /*
