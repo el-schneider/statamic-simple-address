@@ -144,24 +144,11 @@ export default {
         provider,
         additional_exclude_fields: this.meta.additional_exclude_fields || [],
         countries,
-        language,
+        language: Array.isArray(language) ? language.join(',') : language,
       }
 
-      const response = await fetch('/cp/simple-address/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || `API request failed: ${response.status}`)
-      }
-
-      return response.json()
+      const response = await Statamic.$axios.post('/cp/simple-address/search', payload)
+      return response.data
     },
 
     processSearchResults(data) {

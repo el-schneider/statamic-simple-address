@@ -77,7 +77,9 @@ class AddressSearchController
             }
 
             // Make request
-            $response = Http::get($url, $params);
+            $response = Http::withHeaders([
+                'User-Agent' => config('app.name', 'Statamic'),
+            ])->get($url, $params);
 
             if (! $response->successful()) {
                 return response()->json([
