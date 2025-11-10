@@ -27,7 +27,6 @@
 
 <script>
 import vSelect from 'vue-select'
-import { JSONPath } from 'jsonpath-plus'
 import debounce from './utils/debounce'
 
 // Constants
@@ -87,16 +86,11 @@ export default {
     },
 
     searchConfig() {
-      const { countries, language, exclude_fields, debounce_delay } = this.config
-      const { provider_config } = this.meta
+      const { countries, language, debounce_delay } = this.config
       return {
         countries: countries || [],
         language: language || DEFAULT_LANGUAGE,
-        excludeFields: exclude_fields || [],
         debounceDelay: debounce_delay || DEFAULT_DEBOUNCE_DELAY,
-        providerConfig: provider_config || {},
-        displayField: provider_config?.display_field || 'display_name',
-        resultsPath: provider_config?.results_path || '$[*]',
       }
     },
 
@@ -133,8 +127,7 @@ export default {
     async performSearch(loading, search) {
       try {
         const response = await this.performAddressSearch(search)
-        const results = this.extractResults(response)
-        this.options = this.processSearchResults(results)
+        this.options = this.processSearchResults(response.results || [])
       } catch (error) {
         this.handleSearchError(error)
       } finally {
@@ -142,147 +135,40 @@ export default {
       }
     },
 
-    extractResults(response) {
-      const { resultsPath } = this.searchConfig
-      const results = JSONPath({ path: resultsPath, json: response })
-      return results
-    },
-
     async performAddressSearch(query) {
-      const { url, options } = this.buildSearchRequest(query)
+      const { countries, language } = this.searchConfig
+      const { provider } = this.meta
 
-      const response = await fetch(url, options)
+      const payload = {
+        query,
+        provider,
+        additional_exclude_fields: this.meta.additional_exclude_fields || [],
+        countries,
+        language,
+      }
+
+      const response = await fetch('/cp/simple-address/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        },
+        body: JSON.stringify(payload),
+      })
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+        const error = await response.json()
+        throw new Error(error.message || `API request failed: ${response.status}`)
       }
 
       return response.json()
     },
 
-    buildSearchRequest(query) {
-      const { providerConfig } = this.searchConfig
-      if (!providerConfig || !providerConfig.base_url) {
-        throw new Error('Provider configuration not properly loaded')
-      }
-
-      const useJsonBody = providerConfig.use_json_body || false
-
-      if (useJsonBody) {
-        return this.buildJsonBodyRequest(query, providerConfig)
-      }
-
-      return {
-        url: this.buildSearchUrl(query),
-        options: {
-          headers: {
-            Accept: 'application/json',
-          },
-        },
-      }
-    },
-
-    buildJsonBodyRequest(query, providerConfig) {
-      const { countries, language } = this.searchConfig
-
-      const body = {
-        [providerConfig.freeform_search_key]: query,
-        ...providerConfig.request_options,
-      }
-
-      if (language && language !== 'en') {
-        body.language = language
-      }
-
-      if (countries.length > 0) {
-        body.region_code = countries[0]
-      }
-
-      let url = providerConfig.base_url
-
-      // Add API key as query parameter
-      if (providerConfig.api_key && providerConfig.api_key_param_name) {
-        const separator = url.includes('?') ? '&' : '?'
-        url += `${separator}${providerConfig.api_key_param_name}=${encodeURIComponent(providerConfig.api_key)}`
-      }
-
-      return {
-        url,
-        options: {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(body),
-        },
-      }
-    },
-
-    /**
-     * Build search URL with parameters from provider configuration
-     * @param {string} query - Search query
-     * @returns {string} Complete search URL
-     */
-    buildSearchUrl(query) {
-      const { providerConfig } = this.searchConfig
-      const { countries, language } = this.searchConfig
-
-      if (!providerConfig || !providerConfig.base_url) {
-        throw new Error('Provider configuration not properly loaded')
-      }
-
-      const params = new URLSearchParams({
-        [providerConfig.freeform_search_key]: query,
-        ...providerConfig.request_options,
-      })
-
-      // Add accept-language header for providers that support it (not Google)
-      if (!providerConfig.use_json_body) {
-        params.set('accept-language', language)
-      }
-
-      if (countries.length > 0) {
-        params.set('countrycodes', countries.join(','))
-      }
-
-      // Add API key if provider requires it
-      if (providerConfig.api_key && providerConfig.api_key_param_name) {
-        params.set(providerConfig.api_key_param_name, providerConfig.api_key)
-      }
-
-      return `${providerConfig.base_url}?${params}`
-    },
-
     processSearchResults(data) {
-      return data.map((item) => this.processSearchItem(item))
-    },
-
-    processSearchItem(item) {
-      const processedItem = {
-        label: item[this.searchConfig.displayField],
-        ...item,
-      }
-
-      this.searchConfig.excludeFields.forEach((field) => {
-        if (processedItem[field]) {
-          delete processedItem[field]
-        }
-      })
-
-      if (processedItem.namedetails) {
-        this.cleanNameDetails(processedItem.namedetails)
-      }
-
-      return processedItem
-    },
-
-    cleanNameDetails(namedetails) {
-      Object.keys(namedetails).forEach((key) => {
-        if (key.includes(':')) {
-          delete namedetails[key]
-        }
-      })
+      return data.map((item) => ({
+        label: item.label,
+        value: item,
+      }))
     },
 
     handleSearchError(error) {
