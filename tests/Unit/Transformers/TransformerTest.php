@@ -1,11 +1,11 @@
 <?php
 
-use ElSchneider\StatamicSimpleAddress\Data\AddressResult;
 use ElSchneider\StatamicSimpleAddress\Data\SearchResponse;
 use ElSchneider\StatamicSimpleAddress\Transformers\Transformer;
 
 test('normalize excludes specified fields', function () {
-    $transformer = new class extends Transformer {
+    $transformer = new class extends Transformer
+    {
         public function transform(array $rawResponse): SearchResponse
         {
             return new SearchResponse([

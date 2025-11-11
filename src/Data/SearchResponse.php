@@ -5,7 +5,7 @@ namespace ElSchneider\StatamicSimpleAddress\Data;
 readonly class SearchResponse
 {
     /**
-     * @param AddressResult[] $results
+     * @param  AddressResult[]  $results
      */
     public function __construct(
         public array $results = [],
@@ -15,7 +15,7 @@ readonly class SearchResponse
     {
         return [
             'results' => array_map(
-                fn(AddressResult $result) => $result->toArray(),
+                fn (AddressResult $result) => $result->toArray(),
                 $this->results
             ),
         ];

@@ -15,8 +15,8 @@ abstract class Transformer
     /**
      * Normalize a single item from provider response
      *
-     * @param array<string, mixed> $item Raw item from provider
-     * @param string[] $excludeFields Fields to exclude from result
+     * @param  array<string, mixed>  $item  Raw item from provider
+     * @param  string[]  $excludeFields  Fields to exclude from result
      */
     protected function normalize(array $item, array $excludeFields): AddressResult
     {
@@ -37,7 +37,7 @@ abstract class Transformer
 
         $additional = array_filter(
             $item,
-            fn($key) => !isset($excludeSet[$key]),
+            fn ($key) => ! isset($excludeSet[$key]),
             ARRAY_FILTER_USE_KEY
         );
 
