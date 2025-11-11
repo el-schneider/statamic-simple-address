@@ -23,4 +23,15 @@ abstract class TestCase extends AddonTestCase
         // Load the addon config
         $app['config']->set('simple-address', require __DIR__.'/../config/simple-address.php');
     }
+
+    protected function deleteFakeStacheDirectory(): void
+    {
+        app('files')->deleteDirectory($this->fakeStacheDirectory);
+
+        if (! is_dir($this->fakeStacheDirectory)) {
+            mkdir($this->fakeStacheDirectory, 0755, true);
+        }
+
+        touch($this->fakeStacheDirectory.'/.gitkeep');
+    }
 }
