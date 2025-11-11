@@ -8,7 +8,6 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "build:publish": "npm run build && rm -rf ../../../public/vendor/statamic-simple-address && php ../../../artisan vendor:publish --tag=statamic-simple-address --force",
     "check": "npm run format:check && npm run eslint:check && npm run pint:check",
     "dev": "vite",
     "eslint:check": "eslint .",

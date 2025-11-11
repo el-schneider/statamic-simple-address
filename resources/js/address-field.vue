@@ -19,10 +19,7 @@
         <div v-text="label" />
       </template>
       <template #no-options>
-        <div
-          class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right"
-          v-text="noOptionsText"
-        />
+        <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
       </template>
     </v-select>
   </div>
