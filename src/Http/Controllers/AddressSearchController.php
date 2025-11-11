@@ -14,9 +14,11 @@ class AddressSearchController
 {
     /**
      * Enforce minimum debounce delay for a provider to prevent exceeding rate limits.
-     * Latest request wins: if a newer request arrives during throttle window, earlier ones are skipped.
+     * Uses atomic locking to check if enough time has passed since the last request.
+     * If not enough time has passed, returns false (request should be skipped).
+     * The frontend's debounce will naturally retry after a delay.
      *
-     * @return bool True if this request should proceed, false if superseded by a newer request
+     * @return bool True if this request should proceed, false if too soon (will retry naturally)
      */
     private function enforceMinimumDelay(string $provider, int $minDelayMs): bool
     {
@@ -24,35 +26,34 @@ class AddressSearchController
             return true;
         }
 
-        $cacheKey = "simple_address:throttle:{$provider}";
-        $timeKey = "{$cacheKey}:time";
-        $idKey = "{$cacheKey}:id";
+        $lockKey = "simple_address:throttle:{$provider}";
+        $timeKey = "{$lockKey}:time";
 
-        $lastRequestTime = Cache::get($timeKey);
-        $currentRequestId = uniqid();
+        // Try to acquire lock without blocking
+        $lock = Cache::lock($lockKey, 5);
+        if (! $lock->get()) {
+            // Another request is currently being processed
+            return false;
+        }
 
-        // Register this request
-        Cache::put($idKey, $currentRequestId, 60);
+        try {
+            $lastRequestTime = Cache::get($timeKey);
 
-        if ($lastRequestTime) {
-            $elapsed = now()->diffInMilliseconds($lastRequestTime);
-            if ($elapsed < $minDelayMs) {
-                $sleepMs = $minDelayMs - $elapsed;
-                usleep($sleepMs * 1000);
-
-                // After waiting, check if a newer request came in
-                $latestRequestId = Cache::get($idKey);
-                if ($latestRequestId !== $currentRequestId) {
-                    // A newer request arrived while we were waiting
+            if ($lastRequestTime) {
+                $elapsed = now()->diffInMilliseconds($lastRequestTime);
+                if ($elapsed < $minDelayMs) {
+                    // Not enough time has passed yet
                     return false;
                 }
             }
+
+            // Update the time for this request (held under lock)
+            Cache::put($timeKey, now(), 60);
+
+            return true;
+        } finally {
+            $lock->release();
         }
-
-        // Record this request's completion time
-        Cache::put($timeKey, now(), 60);
-
-        return true;
     }
 
     public function __invoke(Request $request): JsonResponse
@@ -129,12 +130,11 @@ class AddressSearchController
             }
 
             // Enforce minimum debounce delay for this provider (only for API calls, not cache hits)
-            // If a newer request came in, skip this one (latest request wins)
+            // If too soon, return empty results. Frontend debounce will retry naturally.
             $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
             if (! $this->enforceMinimumDelay($provider, $minDelay)) {
                 return response()->json([
                     'results' => [],
-                    'message' => 'Request superseded by newer request',
                 ], 200);
             }
 
