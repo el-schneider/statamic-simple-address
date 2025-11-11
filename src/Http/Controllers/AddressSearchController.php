@@ -6,6 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 use function Illuminate\Support\defer;
@@ -126,7 +127,8 @@ class AddressSearchController
                 $transformer = new $transformerClass($allExclusions);
                 $result = $transformer->transform($cachedResponse);
 
-                return response()->json($result->toArray(), 200);
+                return response()->json($result->toArray(), 200)
+                    ->header('X-Cache', 'HIT');
             }
 
             // Enforce minimum debounce delay for this provider (only for API calls, not cache hits)
@@ -165,6 +167,13 @@ class AddressSearchController
             ])->get($url, $params);
 
             if (! $response->successful()) {
+                Log::warning('simple-address: provider API request failed', [
+                    'provider' => $provider,
+                    'query' => $validated['query'],
+                    'status' => $response->status(),
+                    'url' => $url,
+                    'response_body' => $response->body(),
+                ]);
                 return response()->json([
                     'message' => 'Provider API request failed',
                     'status' => $response->status(),
@@ -180,8 +189,17 @@ class AddressSearchController
             // Cache the API response for 1 year after response is sent (deferred to avoid blocking)
             defer(fn () => Cache::put($cacheKey, $apiResponse, now()->addYear()));
 
-            return response()->json($result->toArray(), 200);
+            return response()->json($result->toArray(), 200)
+                ->header('X-Cache', 'MISS');
         } catch (\Exception $e) {
+            Log::error('simple-address: unexpected error during address search', [
+                'query' => $validated['query'] ?? null,
+                'provider' => $validated['provider'] ?? null,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return response()->json([
                 'message' => 'Internal server error',
                 'error' => config('app.debug') ? $e->getMessage() : null,
