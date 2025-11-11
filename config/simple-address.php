@@ -89,6 +89,25 @@ return [
             ],
         ],
 
+        'google' => [
+            // Google Maps Geocoding API. Requires API key from Google Cloud Console.
+            // Docs: https://developers.google.com/maps/documentation/geocoding
+            'min_debounce_delay' => 0,
+            'base_url' => env('GOOGLE_GEOCODE_BASE_URL', 'https://maps.googleapis.com/maps/api/geocode/json'),
+            'api_key' => env('GOOGLE_GEOCODE_API_KEY'),
+            'api_key_param_name' => 'key',
+            'freeform_search_key' => 'address',
+            'request_options' => [],
+            'display_field' => 'formatted_address',
+            'results_path' => '$.results[*]',
+            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GoogleTransformer::class,
+            'default_exclude_fields' => [
+                'address_components',
+                'geometry',
+                'place_id',
+            ],
+        ],
+
         /*
          * Custom providers can be added here. Example:
          *
