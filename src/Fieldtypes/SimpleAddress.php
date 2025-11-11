@@ -40,9 +40,9 @@ class SimpleAddress extends Fieldtype
             'debounce_delay' => [
                 'type' => 'integer',
                 'display' => __('Search Debounce Delay'),
-                'instructions' => __('Delay in milliseconds before triggering the search. **Must be at least 1000ms (1 second) to comply with [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/) which allows a maximum of 1 request per second.** Higher values reduce API calls but may feel less responsive.'),
+                'instructions' => __('Delay in milliseconds before triggering search requests. This is a frontend optimization to reduce API calls while typing. The backend enforces each provider\'s minimum delay requirement automatically.'),
                 'width' => 50,
-                'default' => 1000,
+                'default' => 300,
                 'min' => 100,
                 'max' => 2000,
                 'required' => true,
@@ -116,6 +116,7 @@ class SimpleAddress extends Fieldtype
         return [
             'provider_config' => $providerConfig,
             'provider' => $provider,
+            'provider_min_debounce_delay' => $providerConfig['min_debounce_delay'] ?? 0,
             'default_exclude_fields' => $defaultExclusions,
             'additional_exclude_fields' => $fieldLevelExclusions,
             'all_exclude_fields' => $allExclusions,

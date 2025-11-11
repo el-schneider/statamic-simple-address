@@ -31,7 +31,7 @@ import debounce from './utils/debounce'
 
 // Constants
 const DEFAULT_LANGUAGE = 'en'
-const DEFAULT_DEBOUNCE_DELAY = 1000
+const DEFAULT_DEBOUNCE_DELAY = 300
 
 export default {
   name: 'SimpleAddressField',
@@ -87,10 +87,13 @@ export default {
 
     searchConfig() {
       const { countries, language, debounce_delay } = this.config
+      const fieldDebounceDelay = debounce_delay || DEFAULT_DEBOUNCE_DELAY
+      const providerMinDelay = this.meta.provider_min_debounce_delay || 0
+
       return {
         countries: countries || [],
         language: language || DEFAULT_LANGUAGE,
-        debounceDelay: debounce_delay || DEFAULT_DEBOUNCE_DELAY,
+        debounceDelay: Math.max(fieldDebounceDelay, providerMinDelay),
       }
     },
 
@@ -104,6 +107,9 @@ export default {
 
   watch: {
     'searchConfig.debounceDelay'() {
+      this.debouncedSearchFunction = null
+    },
+    'meta.provider_min_debounce_delay'() {
       this.debouncedSearchFunction = null
     },
   },

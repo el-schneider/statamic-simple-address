@@ -10,8 +10,9 @@ return [
     'providers' => [
         'nominatim' => [
             // Free OpenStreetMap geocoding. No API key required.
-            // Rate limit: 1 request/second. Use debounce delay >= 1000ms.
+            // Rate limit: 1 request/second. Backend enforces via min_debounce_delay.
             // Docs: https://nominatim.org/
+            'min_debounce_delay' => 1000,
             'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org/search'),
             'freeform_search_key' => 'q',
             'request_options' => [
@@ -42,6 +43,7 @@ return [
         'geoapify' => [
             // Managed Nominatim service with higher reliability and better support.
             // Requires API key: https://www.geoapify.com/
+            'min_debounce_delay' => 0,
             'base_url' => env('GEOAPIFY_BASE_URL', 'https://api.geoapify.com/v1/geocode/search'),
             'api_key' => env('GEOAPIFY_API_KEY'),
             'api_key_param_name' => 'apiKey',
@@ -66,6 +68,7 @@ return [
         'geocodify' => [
             // Alternative geocoding provider with global coverage.
             // Requires API key: https://geocodify.com/
+            'min_debounce_delay' => 0,
             'base_url' => env('GEOCODIFY_BASE_URL', 'https://api.geocodify.com/v2/geocode'),
             'api_key' => env('GEOCODIFY_API_KEY'),
             'api_key_param_name' => 'api_key',
