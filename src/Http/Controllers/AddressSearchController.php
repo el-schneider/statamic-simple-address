@@ -174,6 +174,7 @@ class AddressSearchController
                     'url' => $url,
                     'response_body' => $response->body(),
                 ]);
+
                 return response()->json([
                     'message' => 'Provider API request failed',
                     'status' => $response->status(),
@@ -200,6 +201,7 @@ class AddressSearchController
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+
             return response()->json([
                 'message' => 'Internal server error',
                 'error' => config('app.debug') ? $e->getMessage() : null,
