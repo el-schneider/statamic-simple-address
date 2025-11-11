@@ -87,6 +87,15 @@ class AddressSearchController
                 ], 400);
             }
 
+            // Validate API key is set if required by provider
+            $apiKeyRequired = ! empty($providerConfig['api_key_param_name']);
+            $apiKeyProvided = ! empty($providerConfig['api_key']);
+            if ($apiKeyRequired && ! $apiKeyProvided) {
+                return response()->json([
+                    'message' => "Please configure the API key for {$provider} in your environment variables or settings.",
+                ], 400);
+            }
+
             $transformerClass = $providerConfig['transformer'] ?? null;
             if (! $transformerClass || ! class_exists($transformerClass)) {
                 return response()->json([

@@ -132,3 +132,17 @@ test('identical requests are cached', function () {
     Http::assertSentCount(1); // Should still be 1, not 2 (cache was hit)
     expect($response2->json())->toBe($response1->json()); // Same result
 });
+
+test('search with missing API key returns helpful error', function () {
+    // Test with a provider that requires an API key but has none configured
+    $response = $this->postJson('/cp/simple-address/search', [
+        'query' => 'London',
+        'provider' => 'geoapify',
+        'additional_exclude_fields' => [],
+        'countries' => [],
+        'language' => 'en',
+    ]);
+
+    $response->assertStatus(400);
+    expect($response->json('message'))->toContain('API key');
+});

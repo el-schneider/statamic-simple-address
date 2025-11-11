@@ -166,7 +166,9 @@ export default {
 
     handleSearchError(error) {
       console.error('Address search failed:', error)
-      this.$toast.error(this.__('Failed to search addresses. Please try again.'))
+
+      const message = error.response?.data?.message || this.__('Failed to search addresses. Please try again.')
+      this.$toast.error(this.__(message))
     },
   },
 }
