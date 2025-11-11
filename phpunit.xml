@@ -8,6 +8,9 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -15,6 +18,7 @@
         </include>
     </source>
     <php>
+        <env name="APP_KEY" value="base64:+m5wTzwUC1u0xW0EZQIlOAGJDj8xdRvvMT0sAUakTPs="/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

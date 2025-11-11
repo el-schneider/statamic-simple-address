@@ -105,3 +105,30 @@ test('search applies default exclude fields from config', function () {
     expect($results[0]['additional'])->not()->toHaveKey('osm_id');
     expect($results[0]['additional'])->not()->toHaveKey('place_id');
 });
+
+test('identical requests are cached', function () {
+    // First request should hit API
+    $response1 = $this->postJson('/cp/simple-address/search', [
+        'query' => 'Paris',
+        'provider' => 'nominatim',
+        'additional_exclude_fields' => [],
+        'countries' => [],
+        'language' => 'en',
+    ]);
+
+    expect($response1->status())->toBe(200);
+    Http::assertSentCount(1);
+
+    // Second identical request should hit cache, not API
+    $response2 = $this->postJson('/cp/simple-address/search', [
+        'query' => 'Paris',
+        'provider' => 'nominatim',
+        'additional_exclude_fields' => [],
+        'countries' => [],
+        'language' => 'en',
+    ]);
+
+    expect($response2->status())->toBe(200);
+    Http::assertSentCount(1); // Should still be 1, not 2 (cache was hit)
+    expect($response2->json())->toBe($response1->json()); // Same result
+});

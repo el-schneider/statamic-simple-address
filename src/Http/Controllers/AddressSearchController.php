@@ -4,8 +4,10 @@ namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
+use function Illuminate\Support\defer;
 
 class AddressSearchController
 {
@@ -55,6 +57,24 @@ class AddressSearchController
                 $validated['additional_exclude_fields'] ?? []
             ));
 
+            // Build cache key from query params (excluding additional_exclude_fields)
+            $cacheKeyData = [
+                'query' => $validated['query'],
+                'provider' => $provider,
+                'countries' => $validated['countries'] ?? [],
+                'language' => $validated['language'] ?? null,
+            ];
+            $cacheKey = 'address-search:'.hash('sha256', json_encode($cacheKeyData));
+
+            // Check cache first
+            if (Cache::has($cacheKey)) {
+                $cachedResponse = Cache::get($cacheKey);
+                $transformer = new $transformerClass($allExclusions);
+                $result = $transformer->transform($cachedResponse);
+
+                return response()->json($result->toArray(), 200);
+            }
+
             // Build request to external provider
             $url = $providerConfig['base_url'];
             $params = [
@@ -88,9 +108,14 @@ class AddressSearchController
                 ], 502);
             }
 
+            $apiResponse = $response->json();
+
             // Transform response
             $transformer = new $transformerClass($allExclusions);
-            $result = $transformer->transform($response->json());
+            $result = $transformer->transform($apiResponse);
+
+            // Cache the API response for 1 year after response is sent (deferred to avoid blocking)
+            defer(fn () => Cache::put($cacheKey, $apiResponse, now()->addYear()));
 
             return response()->json($result->toArray(), 200);
         } catch (\Exception $e) {
