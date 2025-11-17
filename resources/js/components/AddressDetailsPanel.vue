@@ -101,7 +101,7 @@ export default {
         draggable: true,
         icon: L.divIcon({
           className: 'simple-address-marker',
-          html: '<div class="w-4 h-4 rounded-full bg-red-600 border-2 border-red-700 shadow-lg"></div>',
+          html: '<div style="width: 16px; height: 16px; background-color: #dc2626; border: 2px solid #991b1b; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); box-sizing: border-box;"></div>',
           iconSize: [16, 16],
           iconAnchor: [8, 8],
         }),
@@ -146,9 +146,5 @@ export default {
 pre {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   line-height: 1.5;
-}
-
-:deep(.simple-address-marker) {
-  background: transparent;
 }
 </style>
