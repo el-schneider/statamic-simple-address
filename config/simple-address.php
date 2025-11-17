@@ -62,6 +62,7 @@ return [
                 'place_id',
                 'query',
                 'rank',
+                'namedetails',
             ],
         ],
 

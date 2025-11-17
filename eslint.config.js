@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import globals from 'globals'
+import prettier from 'eslint-config-prettier'
 
 export default defineConfig([
   globalIgnores(['**/dist/**', '**/node_modules/**', '**/vendor/**', 'vendor/**']),
@@ -26,4 +27,5 @@ export default defineConfig([
       'vue/no-use-computed-property-like-method': 'off',
     },
   },
+  prettier,
 ])

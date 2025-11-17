@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- Address Select -->
     <v-select
       ref="select"
       :value="value"
@@ -22,12 +23,28 @@
         <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
       </template>
     </v-select>
+
+    <!-- Details Toggle Button -->
+    <div class="mb-2 mt-0.5 flex justify-end text-right">
+      <button
+        v-if="value"
+        type="button"
+        class="mr-1 text-xs hover:text-blue-700 hover:underline"
+        @click="toggleDetails"
+      >
+        {{ detailsButtonText }}
+      </button>
+    </div>
+
+    <!-- Address Details Panel -->
+    <address-details-panel v-if="showDetails && value" :address="value" />
   </div>
 </template>
 
 <script>
 import vSelect from 'vue-select'
 import debounce from './utils/debounce'
+import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
 
 // Constants
 const DEFAULT_LANGUAGE = 'en'
@@ -38,6 +55,7 @@ export default {
 
   components: {
     vSelect,
+    AddressDetailsPanel,
   },
 
   mixins: [Fieldtype],
@@ -46,6 +64,7 @@ export default {
     return {
       options: [],
       debouncedSearchFunction: null,
+      showDetails: false,
     }
   },
 
@@ -85,6 +104,10 @@ export default {
       return this.__('No options to choose from.')
     },
 
+    detailsButtonText() {
+      return this.__('details')
+    },
+
     searchConfig() {
       const { countries, language, debounce_delay } = this.config
       const fieldDebounceDelay = debounce_delay || DEFAULT_DEBOUNCE_DELAY
@@ -117,6 +140,12 @@ export default {
   methods: {
     setSelected(value) {
       this.update(value)
+      // Close details panel when a new address is selected
+      this.showDetails = false
+    },
+
+    toggleDetails() {
+      this.showDetails = !this.showDetails
     },
 
     onSearch(search, loading) {
