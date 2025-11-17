@@ -37,7 +37,12 @@
     </div>
 
     <!-- Address Details Panel -->
-    <address-details-panel v-if="showDetails && value" :address="value" @coordinates-changed="onCoordinatesChanged" />
+    <address-details-panel
+      v-if="showDetails && value"
+      ref="detailsPanel"
+      :address="value"
+      @coordinates-changed="onCoordinatesChanged"
+    />
   </div>
 </template>
 
@@ -220,12 +225,16 @@ export default {
           this.update(results[0])
           this.$toast.success(this.__('Address updated from map'))
         } else {
+          // No results found - revert marker position
           this.$toast.error(this.__('No address found at this location'))
+          this.$refs.detailsPanel?.revertMarkerPosition()
         }
       } catch (error) {
         console.error('Reverse geocoding failed:', error)
         const message = error.response?.data?.message || this.__('Failed to lookup address. Please try again.')
         this.$toast.error(this.__(message))
+        // Revert marker on error
+        this.$refs.detailsPanel?.revertMarkerPosition()
       }
     },
   },

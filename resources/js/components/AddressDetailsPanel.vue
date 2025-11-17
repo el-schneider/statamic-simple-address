@@ -132,6 +132,12 @@ export default {
         })
       }, 500)
     },
+
+    revertMarkerPosition() {
+      if (this.marker && this.originalPosition) {
+        this.marker.setLatLng(this.originalPosition)
+      }
+    },
   },
 }
 </script>
