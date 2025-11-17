@@ -181,7 +181,7 @@ class ReverseGeocodeController
 
             $apiResponse = $response->json();
 
-            // Reverse geocoding returns single object, wrap in array for transformer compatibility
+            // Nominatim reverse endpoint returns a single object, wrap it in array for transformer
             // Check if response is a single result object (has lat/lon keys) vs already an array
             if (is_array($apiResponse) && isset($apiResponse['lat']) && ! isset($apiResponse[0])) {
                 // Single result from reverse - wrap it
