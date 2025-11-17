@@ -34,6 +34,7 @@ export default {
       map: null,
       marker: null,
       originalPosition: null,
+      dragEndTimeout: null,
     }
   },
 
@@ -55,6 +56,9 @@ export default {
   },
 
   beforeDestroy() {
+    if (this.dragEndTimeout) {
+      clearTimeout(this.dragEndTimeout)
+    }
     if (this.marker) {
       this.marker.off('dragend')
     }
@@ -114,11 +118,19 @@ export default {
     },
 
     onMarkerDragEnd() {
-      const newLatLng = this.marker.getLatLng()
-      this.$emit('coordinates-changed', {
-        lat: parseFloat(newLatLng.lat).toFixed(7),
-        lon: parseFloat(newLatLng.lng).toFixed(7),
-      })
+      // Cancel previous pending drag
+      if (this.dragEndTimeout) {
+        clearTimeout(this.dragEndTimeout)
+      }
+
+      // Debounce: wait 500ms after drag stops before emitting
+      this.dragEndTimeout = setTimeout(() => {
+        const newLatLng = this.marker.getLatLng()
+        this.$emit('coordinates-changed', {
+          lat: parseFloat(newLatLng.lat).toFixed(7),
+          lon: parseFloat(newLatLng.lng).toFixed(7),
+        })
+      }, 500)
     },
   },
 }
