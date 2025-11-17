@@ -4,6 +4,7 @@ namespace ElSchneider\StatamicSimpleAddress;
 
 use ElSchneider\StatamicSimpleAddress\Fieldtypes\SimpleAddress;
 use ElSchneider\StatamicSimpleAddress\Http\Controllers\AddressSearchController;
+use ElSchneider\StatamicSimpleAddress\Http\Controllers\ReverseGeocodeController;
 use Illuminate\Support\Facades\Route;
 use Statamic\Providers\AddonServiceProvider;
 
@@ -25,6 +26,8 @@ class ServiceProvider extends AddonServiceProvider
         $this->registerCpRoutes(function () {
             Route::post('simple-address/search', AddressSearchController::class)
                 ->name('simple-address.search');
+            Route::post('simple-address/reverse', ReverseGeocodeController::class)
+                ->name('simple-address.reverse');
         });
     }
 

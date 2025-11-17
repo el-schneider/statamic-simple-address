@@ -37,7 +37,7 @@
     </div>
 
     <!-- Address Details Panel -->
-    <address-details-panel v-if="showDetails && value" :address="value" />
+    <address-details-panel v-if="showDetails && value" :address="value" @coordinates-changed="onCoordinatesChanged" />
   </div>
 </template>
 
@@ -198,6 +198,35 @@ export default {
 
       const message = error.response?.data?.message || this.__('Failed to search addresses. Please try again.')
       this.$toast.error(this.__(message))
+    },
+
+    async onCoordinatesChanged({ lat, lon }) {
+      try {
+        const language = Array.isArray(this.searchConfig.language)
+          ? this.searchConfig.language.join(',')
+          : this.searchConfig.language
+
+        const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
+          lat,
+          lon,
+          provider: this.meta.provider,
+          language: language || null,
+          additional_exclude_fields: this.meta.additional_exclude_fields || [],
+        })
+
+        const results = response.data.results || []
+
+        if (results.length > 0) {
+          this.update(results[0])
+          this.$toast.success(this.__('Address updated from map'))
+        } else {
+          this.$toast.error(this.__('No address found at this location'))
+        }
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error)
+        const message = error.response?.data?.message || this.__('Failed to lookup address. Please try again.')
+        this.$toast.error(this.__(message))
+      }
     },
   },
 }

@@ -14,11 +14,17 @@ return [
             // Docs: https://nominatim.org/
             'min_debounce_delay' => 1000,
             'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org/search'),
+            'reverse_base_url' => env('NOMINATIM_REVERSE_BASE_URL', 'https://nominatim.openstreetmap.org/reverse'),
             'freeform_search_key' => 'q',
             'request_options' => [
                 'addressdetails' => '1',
                 'namedetails' => '1',
                 'format' => 'json',
+            ],
+            'reverse_request_options' => [
+                'format' => 'json',
+                'addressdetails' => '1',
+                'zoom' => '18',
             ],
             'display_field' => 'display_name',
             'results_path' => '$[*]',
@@ -45,12 +51,16 @@ return [
             // Requires API key: https://www.geoapify.com/
             'min_debounce_delay' => 0,
             'base_url' => env('GEOAPIFY_BASE_URL', 'https://api.geoapify.com/v1/geocode/search'),
+            'reverse_base_url' => env('GEOAPIFY_REVERSE_BASE_URL', 'https://api.geoapify.com/v1/geocode/reverse'),
             'api_key' => env('GEOAPIFY_API_KEY'),
             'api_key_param_name' => 'apiKey',
             'freeform_search_key' => 'text',
             'request_options' => [
                 'addressdetails' => '1',
                 'namedetails' => '1',
+                'format' => 'json',
+            ],
+            'reverse_request_options' => [
                 'format' => 'json',
             ],
             'display_field' => 'formatted',
@@ -71,12 +81,16 @@ return [
             // Requires API key: https://geocodify.com/
             'min_debounce_delay' => 0,
             'base_url' => env('GEOCODIFY_BASE_URL', 'https://api.geocodify.com/v2/geocode'),
+            'reverse_base_url' => env('GEOCODIFY_REVERSE_BASE_URL', 'https://api.geocodify.com/v2/geocode'),
             'api_key' => env('GEOCODIFY_API_KEY'),
             'api_key_param_name' => 'api_key',
             'freeform_search_key' => 'q',
             'request_options' => [
                 'addressdetails' => '1',
                 'namedetails' => '1',
+                'format' => 'json',
+            ],
+            'reverse_request_options' => [
                 'format' => 'json',
             ],
             'display_field' => 'label',
@@ -99,6 +113,7 @@ return [
             'api_key_param_name' => 'key',
             'freeform_search_key' => 'address',
             'request_options' => [],
+            'reverse_request_options' => [],
             'display_field' => 'formatted_address',
             'results_path' => '$.results[*]',
             'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GoogleTransformer::class,

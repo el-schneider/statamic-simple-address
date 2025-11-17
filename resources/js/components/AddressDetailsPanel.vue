@@ -29,6 +29,14 @@ export default {
     },
   },
 
+  data() {
+    return {
+      map: null,
+      marker: null,
+      originalPosition: null,
+    }
+  },
+
   watch: {
     address: {
       handler() {
@@ -47,6 +55,9 @@ export default {
   },
 
   beforeDestroy() {
+    if (this.marker) {
+      this.marker.off('dragend')
+    }
     if (this.map) {
       this.map.remove()
     }
@@ -81,18 +92,33 @@ export default {
         maxZoom: 19,
       }).addTo(this.map)
 
-      // Add marker
-      L.circleMarker([parseFloat(lat), parseFloat(lon)], {
-        radius: 8,
-        fillColor: '#ef4444',
-        color: '#dc2626',
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 1,
+      // Add draggable marker with custom styling
+      this.marker = L.marker([parseFloat(lat), parseFloat(lon)], {
+        draggable: true,
+        icon: L.divIcon({
+          className: 'simple-address-marker',
+          html: '<div class="w-4 h-4 rounded-full bg-red-600 border-2 border-red-700 shadow-lg"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        }),
       }).addTo(this.map)
+
+      // Store original position for reverting on error
+      this.originalPosition = [parseFloat(lat), parseFloat(lon)]
+
+      // Add drag event listener
+      this.marker.on('dragend', () => this.onMarkerDragEnd())
 
       // Invalidate size to ensure proper rendering
       this.map.invalidateSize()
+    },
+
+    onMarkerDragEnd() {
+      const newLatLng = this.marker.getLatLng()
+      this.$emit('coordinates-changed', {
+        lat: parseFloat(newLatLng.lat).toFixed(7),
+        lon: parseFloat(newLatLng.lng).toFixed(7),
+      })
     },
   },
 }
@@ -102,5 +128,9 @@ export default {
 pre {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   line-height: 1.5;
+}
+
+:deep(.simple-address-marker) {
+  background: transparent;
 }
 </style>
