@@ -14,17 +14,25 @@ return [
             // Docs: https://nominatim.org/
             'min_debounce_delay' => 1000,
             'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org/search'),
+
+            // Reverse geocoding endpoint (lat/lon -> address)
             'reverse_base_url' => env('NOMINATIM_REVERSE_BASE_URL', 'https://nominatim.openstreetmap.org/reverse'),
+
             'freeform_search_key' => 'q',
+
+            // Parameters for forward search requests
             'request_options' => [
-                'addressdetails' => '1',
-                'namedetails' => '1',
+                'addressdetails' => '1',  // Include address components
+                'namedetails' => '1',     // Include name variants
                 'format' => 'json',
             ],
+
+            // Parameters for reverse geocoding requests
+            // Nominatim reverse accepts different params than forward search
             'reverse_request_options' => [
                 'format' => 'json',
-                'addressdetails' => '1',
-                'zoom' => '18',
+                'addressdetails' => '1',  // Include address components breakdown
+                'zoom' => '18',           // 18 = building level detail
             ],
             'display_field' => 'display_name',
             'results_path' => '$[*]',
@@ -60,6 +68,7 @@ return [
                 'namedetails' => '1',
                 'format' => 'json',
             ],
+            // Parameters for reverse geocoding requests
             'reverse_request_options' => [
                 'format' => 'json',
             ],
@@ -90,6 +99,7 @@ return [
                 'namedetails' => '1',
                 'format' => 'json',
             ],
+            // Parameters for reverse geocoding requests
             'reverse_request_options' => [
                 'format' => 'json',
             ],
@@ -113,7 +123,7 @@ return [
             'api_key_param_name' => 'key',
             'freeform_search_key' => 'address',
             'request_options' => [],
-            'reverse_request_options' => [],
+            'reverse_request_options' => [],  // Both forward and reverse use same endpoint
             'display_field' => 'formatted_address',
             'results_path' => '$.results[*]',
             'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GoogleTransformer::class,
