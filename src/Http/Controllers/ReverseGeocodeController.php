@@ -2,6 +2,8 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
+use ElSchneider\StatamicSimpleAddress\Exceptions\ProviderApiException;
+use ElSchneider\StatamicSimpleAddress\Services\ProviderApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -9,10 +11,15 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-use function Illuminate\Support\defer;
-
 class ReverseGeocodeController
 {
+    private ProviderApiService $providerService;
+
+    public function __construct(ProviderApiService $providerService)
+    {
+        $this->providerService = $providerService;
+    }
+
     /**
      * Enforce minimum debounce delay for a provider to prevent exceeding rate limits.
      * Uses atomic locking to check if enough time has passed since the last request.
@@ -77,41 +84,15 @@ class ReverseGeocodeController
 
         try {
             $provider = $validated['provider'];
-            $providerConfig = config("simple-address.providers.{$provider}");
+            $providerConfig = $this->providerService->loadProviderConfig($provider);
+            $this->providerService->validateApiKey($providerConfig, $provider);
+            $this->providerService->validateTransformer($providerConfig);
 
-            if (! $providerConfig) {
-                return response()->json([
-                    'message' => "Provider '{$provider}' not found in configuration",
-                    'errors' => [
-                        'provider' => ["Provider '{$provider}' not found in configuration"],
-                    ],
-                ], 400);
-            }
-
-            // Validate API key is set if required by provider
-            $apiKeyRequired = ! empty($providerConfig['api_key_param_name']);
-            $apiKeyProvided = ! empty($providerConfig['api_key']);
-            if ($apiKeyRequired && ! $apiKeyProvided) {
-                return response()->json([
-                    'message' => "Please configure the API key for {$provider} in your environment variables or settings.",
-                ], 400);
-            }
-
-            $transformerClass = $providerConfig['transformer'] ?? null;
-            if (! $transformerClass || ! class_exists($transformerClass)) {
-                return response()->json([
-                    'message' => "Transformer for provider '{$provider}' not found",
-                ], 500);
-            }
-
-            // Merge default and additional exclusions
-            $defaultExclusions = $providerConfig['default_exclude_fields'] ?? [];
-            $allExclusions = array_unique(array_merge(
-                $defaultExclusions,
+            $allExclusions = $this->providerService->buildExclusionList(
+                $providerConfig,
                 $validated['additional_exclude_fields'] ?? []
-            ));
+            );
 
-            // Build cache key for reverse geocoding (by coordinates and language)
             $cacheKeyData = [
                 'reverse' => true,
                 'lat' => $validated['lat'],
@@ -119,84 +100,87 @@ class ReverseGeocodeController
                 'provider' => $provider,
                 'language' => $validated['language'] ?? null,
             ];
-            $cacheKey = 'address-reverse:'.hash('sha256', json_encode($cacheKeyData));
+            $cacheKey = $this->providerService->generateCacheKey('address-reverse', $cacheKeyData);
 
-            // Check cache first - cache hits bypass throttling
-            if (Cache::has($cacheKey)) {
-                $cachedResponse = Cache::get($cacheKey);
-                $transformer = new $transformerClass($allExclusions);
-                $result = $transformer->transform($cachedResponse);
+            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use (
+                $providerConfig,
+                $validated,
+                $provider
+            ) {
+                // Enforce minimum delay
+                $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
+                if (! $this->enforceMinimumDelay($provider, $minDelay)) {
+                    return null;
+                }
 
-                return response()->json($result->toArray(), 200)
-                    ->header('X-Cache', 'HIT');
+                // Build request to external provider using reverse endpoint
+                $url = $providerConfig['reverse_base_url'] ?? $providerConfig['base_url'];
+                $params = [...($providerConfig['reverse_request_options'] ?? $providerConfig['request_options'] ?? [])];
+
+                // Use lat and lon for reverse geocoding
+                $params['lat'] = $validated['lat'];
+                $params['lon'] = $validated['lon'];
+
+                if ($validated['language'] ?? null) {
+                    $params['accept-language'] = $validated['language'];
+                }
+
+                // Add API key if required
+                if (! empty($providerConfig['api_key'])) {
+                    $apiKeyParam = $providerConfig['api_key_param_name'] ?? 'api_key';
+                    $params[$apiKeyParam] = $providerConfig['api_key'];
+                }
+
+                // Make request
+                $response = Http::withHeaders([
+                    'User-Agent' => config('app.name', 'Statamic'),
+                ])->get($url, $params);
+
+                if (! $response->successful()) {
+                    Log::warning('simple-address: reverse geocoding API request failed', [
+                        'provider' => $provider,
+                        'lat' => $validated['lat'],
+                        'lon' => $validated['lon'],
+                        'status' => $response->status(),
+                        'url' => $url,
+                        'response_body' => $response->body(),
+                    ]);
+
+                    throw new ProviderApiException('Provider API request failed', $response->status());
+                }
+
+                $apiResponse = $response->json();
+
+                // Nominatim reverse endpoint returns a single object, wrap it in array for transformer
+                // Check if response is a single result object (has lat/lon keys) vs already an array
+                if (is_array($apiResponse) && isset($apiResponse['lat']) && ! isset($apiResponse[0])) {
+                    // Single result from reverse - wrap it
+                    $apiResponse = [$apiResponse];
+                }
+
+                return $apiResponse;
+            });
+
+            if ($cached['data'] === null) {
+                return response()->json(['results' => []], 200);
             }
 
-            // Enforce minimum debounce delay for this provider (only for API calls, not cache hits)
-            // If too soon, return empty results. Frontend debounce will retry naturally.
-            $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
-            if (! $this->enforceMinimumDelay($provider, $minDelay)) {
-                return response()->json([
-                    'results' => [],
-                ], 200);
-            }
-
-            // Build request to external provider using reverse endpoint
-            $url = $providerConfig['reverse_base_url'] ?? $providerConfig['base_url'];
-            $params = [...($providerConfig['reverse_request_options'] ?? $providerConfig['request_options'] ?? [])];
-
-            // Use lat and lon for reverse geocoding
-            $params['lat'] = $validated['lat'];
-            $params['lon'] = $validated['lon'];
-
-            if ($validated['language'] ?? null) {
-                $params['accept-language'] = $validated['language'];
-            }
-
-            // Add API key if required
-            if (! empty($providerConfig['api_key'])) {
-                $apiKeyParam = $providerConfig['api_key_param_name'] ?? 'api_key';
-                $params[$apiKeyParam] = $providerConfig['api_key'];
-            }
-
-            // Make request
-            $response = Http::withHeaders([
-                'User-Agent' => config('app.name', 'Statamic'),
-            ])->get($url, $params);
-
-            if (! $response->successful()) {
-                Log::warning('simple-address: reverse geocoding API request failed', [
-                    'provider' => $provider,
-                    'lat' => $validated['lat'],
-                    'lon' => $validated['lon'],
-                    'status' => $response->status(),
-                    'url' => $url,
-                    'response_body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'message' => 'Provider API request failed',
-                    'status' => $response->status(),
-                ], 502);
-            }
-
-            $apiResponse = $response->json();
-
-            // Nominatim reverse endpoint returns a single object, wrap it in array for transformer
-            // Check if response is a single result object (has lat/lon keys) vs already an array
-            if (is_array($apiResponse) && isset($apiResponse['lat']) && ! isset($apiResponse[0])) {
-                // Single result from reverse - wrap it
-                $apiResponse = [$apiResponse];
-            }
-
-            // Transform response
+            $transformerClass = $providerConfig['transformer'];
             $transformer = new $transformerClass($allExclusions);
-            $result = $transformer->transform($apiResponse);
+            $result = $transformer->transform($cached['data']);
 
-            // Cache the API response (deferred to avoid blocking)
-            defer(fn () => Cache::put($cacheKey, $apiResponse, now()->addYear()));
+            $headers = $cached['cached'] ? ['X-Cache' => 'HIT'] : ['X-Cache' => 'MISS'];
 
-            return response()->json($result->toArray(), 200)
-                ->header('X-Cache', 'MISS');
+            return response()->json($result->toArray(), 200, $headers);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        } catch (ProviderApiException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status' => $e->getStatusCode(),
+            ], 502);
         } catch (\Exception $e) {
             Log::error('simple-address: unexpected error during reverse geocoding', [
                 'provider' => $validated['provider'] ?? null,
