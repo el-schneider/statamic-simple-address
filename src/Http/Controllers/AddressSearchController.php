@@ -4,9 +4,9 @@ namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
 use ElSchneider\StatamicSimpleAddress\Exceptions\ProviderApiException;
 use ElSchneider\StatamicSimpleAddress\Services\ProviderApiService;
+use ElSchneider\StatamicSimpleAddress\Services\ThrottleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -15,53 +15,12 @@ class AddressSearchController
 {
     private ProviderApiService $providerService;
 
-    public function __construct(ProviderApiService $providerService)
+    private ThrottleService $throttleService;
+
+    public function __construct(ProviderApiService $providerService, ThrottleService $throttleService)
     {
         $this->providerService = $providerService;
-    }
-
-    /**
-     * Enforce minimum debounce delay for a provider to prevent exceeding rate limits.
-     * Uses atomic locking to check if enough time has passed since the last request.
-     * If not enough time has passed, returns false (request should be skipped).
-     * The frontend's debounce will naturally retry after a delay.
-     *
-     * @return bool True if this request should proceed, false if too soon (will retry naturally)
-     */
-    private function enforceMinimumDelay(string $provider, int $minDelayMs): bool
-    {
-        if ($minDelayMs <= 0) {
-            return true;
-        }
-
-        $lockKey = "simple_address:throttle:{$provider}";
-        $timeKey = "{$lockKey}:time";
-
-        // Try to acquire lock without blocking
-        $lock = Cache::lock($lockKey, 5);
-        if (! $lock->get()) {
-            // Another request is currently being processed
-            return false;
-        }
-
-        try {
-            $lastRequestTime = Cache::get($timeKey);
-
-            if ($lastRequestTime) {
-                $elapsed = now()->diffInMilliseconds($lastRequestTime);
-                if ($elapsed < $minDelayMs) {
-                    // Not enough time has passed yet
-                    return false;
-                }
-            }
-
-            // Update the time for this request (held under lock)
-            Cache::put($timeKey, now(), 60);
-
-            return true;
-        } finally {
-            $lock->release();
-        }
+        $this->throttleService = $throttleService;
     }
 
     public function __invoke(Request $request): JsonResponse
@@ -109,7 +68,7 @@ class AddressSearchController
             ) {
                 // Enforce minimum delay
                 $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
-                if (! $this->enforceMinimumDelay($provider, $minDelay)) {
+                if (! $this->throttleService->enforceMinimumDelay($provider, $minDelay)) {
                     return null;
                 }
 
