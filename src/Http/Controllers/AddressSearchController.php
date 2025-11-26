@@ -13,22 +13,17 @@ use Illuminate\Validation\ValidationException;
 
 class AddressSearchController
 {
-    private ProviderApiService $providerService;
-
-    private ThrottleService $throttleService;
-
-    public function __construct(ProviderApiService $providerService, ThrottleService $throttleService)
-    {
-        $this->providerService = $providerService;
-        $this->throttleService = $throttleService;
-    }
+    public function __construct(
+        private ProviderApiService $providerService,
+        private ThrottleService $throttleService
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
                 'query' => 'required|string|min:1|max:255',
-                'provider' => 'required|string|in:'.implode(',', array_keys(config('simple-address.providers', []))),
+                'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
                 'additional_exclude_fields' => 'array',
                 'additional_exclude_fields.*' => 'string',
                 'countries' => 'array',
@@ -43,65 +38,43 @@ class AddressSearchController
         }
 
         try {
-            $provider = $validated['provider'];
-            $providerConfig = $this->providerService->loadProviderConfig($provider);
-            $this->providerService->validateApiKey($providerConfig, $provider);
-            $this->providerService->validateTransformer($providerConfig);
+            $providerName = $validated['provider'];
+            $provider = $this->providerService->resolveProvider($providerName);
+            $this->providerService->validateApiKey($provider, $providerName);
 
-            $allExclusions = $this->providerService->buildExclusionList(
-                $providerConfig,
-                $validated['additional_exclude_fields'] ?? []
-            );
+            if (! empty($validated['additional_exclude_fields'])) {
+                $provider->setExcludeFields($validated['additional_exclude_fields']);
+            }
 
             $cacheKeyData = [
                 'query' => $validated['query'],
-                'provider' => $provider,
+                'provider' => $providerName,
                 'countries' => $validated['countries'] ?? [],
                 'language' => $validated['language'] ?? null,
             ];
             $cacheKey = $this->providerService->generateCacheKey('address-search', $cacheKeyData);
 
-            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use (
-                $providerConfig,
-                $validated,
-                $provider
-            ) {
+            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use ($provider, $validated, $providerName) {
                 // Enforce minimum delay
-                $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
-                if (! $this->throttleService->enforceMinimumDelay($provider, $minDelay)) {
+                if (! $this->throttleService->enforceMinimumDelay($providerName, $provider->getMinDebounceDelay())) {
                     return null;
                 }
 
-                // Build and execute request
-                $url = $providerConfig['base_url'];
-                $params = [
-                    $providerConfig['freeform_search_key'] => $validated['query'],
-                    ...($providerConfig['request_options'] ?? []),
-                ];
-
-                if (! empty($validated['countries'])) {
-                    $params['countrycodes'] = implode(',', $validated['countries']);
-                }
-
-                if ($validated['language'] ?? null) {
-                    $params['accept-language'] = $validated['language'];
-                }
-
-                if (! empty($providerConfig['api_key'])) {
-                    $apiKeyParam = $providerConfig['api_key_param_name'] ?? 'api_key';
-                    $params[$apiKeyParam] = $providerConfig['api_key'];
-                }
+                $request = $provider->buildSearchRequest($validated['query'], [
+                    'countries' => $validated['countries'] ?? [],
+                    'language' => $validated['language'] ?? null,
+                ]);
 
                 $response = Http::withHeaders([
                     'User-Agent' => config('app.name', 'Statamic'),
-                ])->get($url, $params);
+                ])->get($request['url'], $request['params']);
 
                 if (! $response->successful()) {
                     Log::warning('simple-address: provider API request failed', [
-                        'provider' => $provider,
+                        'provider' => $providerName,
                         'query' => $validated['query'],
                         'status' => $response->status(),
-                        'url' => $url,
+                        'url' => $request['url'],
                         'response_body' => $response->body(),
                     ]);
 
@@ -115,17 +88,13 @@ class AddressSearchController
                 return response()->json(['results' => []], 200);
             }
 
-            $transformerClass = $providerConfig['transformer'];
-            $transformer = new $transformerClass($allExclusions);
-            $result = $transformer->transform($cached['data']);
-
+            $result = $provider->transformResponse($cached['data']);
             $headers = $cached['cached'] ? ['X-Cache' => 'HIT'] : ['X-Cache' => 'MISS'];
 
             return response()->json($result->toArray(), 200, $headers);
+
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         } catch (ProviderApiException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

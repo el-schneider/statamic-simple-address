@@ -2,63 +2,84 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
+use ElSchneider\StatamicSimpleAddress\Providers\AbstractProvider;
+use ElSchneider\StatamicSimpleAddress\Providers\GeoapifyProvider;
+use ElSchneider\StatamicSimpleAddress\Providers\GoogleProvider;
+use ElSchneider\StatamicSimpleAddress\Providers\MapboxProvider;
+use ElSchneider\StatamicSimpleAddress\Providers\NominatimProvider;
 use Illuminate\Support\Facades\Cache;
 
 class ProviderApiService
 {
     /**
-     * Load provider configuration with validation
+     * Built-in provider class mappings.
+     *
+     * @var array<string, class-string<AbstractProvider>>
      */
-    public function loadProviderConfig(string $provider): array
-    {
-        $config = config("simple-address.providers.{$provider}");
+    protected static array $builtInProviders = [
+        'nominatim' => NominatimProvider::class,
+        'geoapify' => GeoapifyProvider::class,
+        'google' => GoogleProvider::class,
+        'mapbox' => MapboxProvider::class,
+    ];
 
-        if (! $config) {
-            throw new \InvalidArgumentException("Provider '{$provider}' not found in configuration");
+    /**
+     * Resolve and instantiate a provider by name.
+     */
+    public function resolveProvider(string $name): AbstractProvider
+    {
+        $config = config("simple-address.providers.{$name}", []);
+
+        // Check for custom class in config
+        if (isset($config['class'])) {
+            $class = $config['class'];
+            if (! class_exists($class)) {
+                throw new \InvalidArgumentException("Provider class '{$class}' not found");
+            }
+            if (! is_subclass_of($class, AbstractProvider::class)) {
+                throw new \InvalidArgumentException('Provider class must extend AbstractProvider');
+            }
+
+            return new $class($config);
         }
 
-        return $config;
+        // Check built-in providers
+        if (isset(self::$builtInProviders[$name])) {
+            $class = self::$builtInProviders[$name];
+
+            return new $class($config);
+        }
+
+        throw new \InvalidArgumentException("Provider '{$name}' not found");
     }
 
     /**
-     * Validate API key is configured if required by provider
+     * Get list of available provider names.
+     *
+     * @return string[]
      */
-    public function validateApiKey(array $config, string $provider): void
+    public function getAvailableProviders(): array
     {
-        $apiKeyRequired = ! empty($config['api_key_param_name']);
-        $apiKeyProvided = ! empty($config['api_key']);
+        $configured = array_keys(config('simple-address.providers', []));
+        $builtIn = array_keys(self::$builtInProviders);
 
-        if ($apiKeyRequired && ! $apiKeyProvided) {
+        return array_unique(array_merge($configured, $builtIn));
+    }
+
+    /**
+     * Validate API key is configured if required by provider.
+     */
+    public function validateApiKey(AbstractProvider $provider, string $name): void
+    {
+        if ($provider->requiresApiKey() && empty($provider->getApiKey())) {
             throw new \InvalidArgumentException(
-                "Please configure the API key for {$provider} in your environment variables or settings."
+                "Please configure the API key for {$name} in your environment variables."
             );
         }
     }
 
     /**
-     * Validate transformer class exists
-     */
-    public function validateTransformer(array $config): void
-    {
-        $transformerClass = $config['transformer'] ?? null;
-
-        if (! $transformerClass || ! class_exists($transformerClass)) {
-            throw new \InvalidArgumentException('Transformer for provider not found');
-        }
-    }
-
-    /**
-     * Build exclusion field list from defaults and additional fields
-     */
-    public function buildExclusionList(array $config, array $additionalFields = []): array
-    {
-        $defaultExclusions = $config['default_exclude_fields'] ?? [];
-
-        return array_unique(array_merge($defaultExclusions, $additionalFields));
-    }
-
-    /**
-     * Generate cache key from data
+     * Generate cache key from data.
      */
     public function generateCacheKey(string $prefix, array $data): string
     {
@@ -66,7 +87,7 @@ class ProviderApiService
     }
 
     /**
-     * Get cached response or execute fetcher
+     * Get cached response or execute fetcher.
      */
     public function getCachedOrFetch(string $cacheKey, callable $fetcher): mixed
     {

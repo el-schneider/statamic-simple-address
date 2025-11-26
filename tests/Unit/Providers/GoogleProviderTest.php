@@ -1,10 +1,10 @@
 <?php
 
 use ElSchneider\StatamicSimpleAddress\Data\SearchResponse;
-use ElSchneider\StatamicSimpleAddress\Transformers\GoogleTransformer;
+use ElSchneider\StatamicSimpleAddress\Providers\GoogleProvider;
 
-test('transforms google geocode response', function () {
-    $transformer = new GoogleTransformer([]);
+it('transforms google geocode response', function () {
+    $provider = new GoogleProvider;
 
     $rawResponse = [
         'results' => [
@@ -49,7 +49,7 @@ test('transforms google geocode response', function () {
         ],
     ];
 
-    $response = $transformer->transform($rawResponse);
+    $response = $provider->transformResponse($rawResponse);
 
     expect($response)->toBeInstanceOf(SearchResponse::class);
     expect($response->results)->toHaveCount(1);
@@ -63,8 +63,8 @@ test('transforms google geocode response', function () {
     expect($result['name'])->toBe('Mountain View');
 });
 
-test('extracts address components from google response', function () {
-    $transformer = new GoogleTransformer([]);
+it('extracts address components from google response', function () {
+    $provider = new GoogleProvider;
 
     $rawResponse = [
         'results' => [
@@ -99,10 +99,9 @@ test('extracts address components from google response', function () {
         ],
     ];
 
-    $response = $transformer->transform($rawResponse);
+    $response = $provider->transformResponse($rawResponse);
     $result = $response->results[0]->toArray();
 
-    // Check address has expected structure
     expect($result['address'])->toHaveKey('locality');
     expect($result['address'])->toHaveKey('administrative_area_level_1');
     expect($result['address'])->toHaveKey('country');
@@ -111,8 +110,8 @@ test('extracts address components from google response', function () {
     expect($result['address']['country']['short_name'])->toBe('UK');
 });
 
-test('excludes specified fields from additional', function () {
-    $transformer = new GoogleTransformer(['place_id']);
+it('excludes default fields from additional', function () {
+    $provider = new GoogleProvider;
 
     $rawResponse = [
         'results' => [
@@ -129,25 +128,26 @@ test('excludes specified fields from additional', function () {
         ],
     ];
 
-    $response = $transformer->transform($rawResponse);
+    $response = $provider->transformResponse($rawResponse);
     $result = $response->results[0]->toArray();
 
+    // place_id is in defaultExcludeFields
     expect($result['additional'])->not()->toHaveKey('place_id');
     expect($result['additional'])->toHaveKey('custom_field');
 });
 
-test('handles empty results', function () {
-    $transformer = new GoogleTransformer([]);
+it('handles empty results', function () {
+    $provider = new GoogleProvider;
 
     $rawResponse = ['results' => []];
 
-    $response = $transformer->transform($rawResponse);
+    $response = $provider->transformResponse($rawResponse);
 
     expect($response->results)->toHaveCount(0);
 });
 
-test('handles missing address components', function () {
-    $transformer = new GoogleTransformer([]);
+it('handles missing address components', function () {
+    $provider = new GoogleProvider;
 
     $rawResponse = [
         'results' => [
@@ -164,10 +164,37 @@ test('handles missing address components', function () {
         ],
     ];
 
-    $response = $transformer->transform($rawResponse);
+    $response = $provider->transformResponse($rawResponse);
     $result = $response->results[0]->toArray();
 
     expect($result['label'])->toBe('Simple Address');
     expect($result['address'])->toBe([]);
     expect($result['name'])->toBe('');
+});
+
+it('builds search request with countries', function () {
+    $provider = new GoogleProvider(['api_key' => 'test-key']);
+
+    $request = $provider->buildSearchRequest('London', [
+        'countries' => ['gb', 'us'],
+        'language' => 'en',
+    ]);
+
+    expect($request['url'])->toBe('https://maps.googleapis.com/maps/api/geocode/json');
+    expect($request['params']['address'])->toBe('London');
+    expect($request['params']['components'])->toBe('country:GB|country:US');
+    expect($request['params']['language'])->toBe('en');
+    expect($request['params']['key'])->toBe('test-key');
+});
+
+it('builds reverse request', function () {
+    $provider = new GoogleProvider(['api_key' => 'test-key']);
+
+    $request = $provider->buildReverseRequest(51.5073, -0.1276, [
+        'language' => 'de',
+    ]);
+
+    expect($request['params']['latlng'])->toBe('51.5073,-0.1276');
+    expect($request['params']['language'])->toBe('de');
+    expect($request['params']['key'])->toBe('test-key');
 });

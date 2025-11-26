@@ -13,15 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class ReverseGeocodeController
 {
-    private ProviderApiService $providerService;
-
-    private ThrottleService $throttleService;
-
-    public function __construct(ProviderApiService $providerService, ThrottleService $throttleService)
-    {
-        $this->providerService = $providerService;
-        $this->throttleService = $throttleService;
-    }
+    public function __construct(
+        private ProviderApiService $providerService,
+        private ThrottleService $throttleService
+    ) {}
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -29,7 +24,7 @@ class ReverseGeocodeController
             $validated = $request->validate([
                 'lat' => 'required|numeric|between:-90,90',
                 'lon' => 'required|numeric|between:-180,180',
-                'provider' => 'required|string|in:'.implode(',', array_keys(config('simple-address.providers', []))),
+                'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
                 'additional_exclude_fields' => 'array',
                 'additional_exclude_fields.*' => 'string',
                 'language' => 'string|nullable',
@@ -42,99 +37,66 @@ class ReverseGeocodeController
         }
 
         try {
-            $provider = $validated['provider'];
-            $providerConfig = $this->providerService->loadProviderConfig($provider);
-            $this->providerService->validateApiKey($providerConfig, $provider);
-            $this->providerService->validateTransformer($providerConfig);
+            $providerName = $validated['provider'];
+            $provider = $this->providerService->resolveProvider($providerName);
+            $this->providerService->validateApiKey($provider, $providerName);
 
-            $allExclusions = $this->providerService->buildExclusionList(
-                $providerConfig,
-                $validated['additional_exclude_fields'] ?? []
-            );
+            if (! empty($validated['additional_exclude_fields'])) {
+                $provider->setExcludeFields($validated['additional_exclude_fields']);
+            }
 
             $cacheKeyData = [
                 'reverse' => true,
                 'lat' => $validated['lat'],
                 'lon' => $validated['lon'],
-                'provider' => $provider,
+                'provider' => $providerName,
                 'language' => $validated['language'] ?? null,
             ];
             $cacheKey = $this->providerService->generateCacheKey('address-reverse', $cacheKeyData);
 
-            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use (
-                $providerConfig,
-                $validated,
-                $provider
-            ) {
+            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use ($provider, $validated, $providerName) {
                 // Enforce minimum delay
-                $minDelay = $providerConfig['min_debounce_delay'] ?? 0;
-                if (! $this->throttleService->enforceMinimumDelay($provider, $minDelay)) {
+                if (! $this->throttleService->enforceMinimumDelay($providerName, $provider->getMinDebounceDelay())) {
                     return null;
                 }
 
-                // Build request to external provider using reverse endpoint
-                $url = $providerConfig['reverse_base_url'] ?? $providerConfig['base_url'];
-                $params = [...($providerConfig['reverse_request_options'] ?? $providerConfig['request_options'] ?? [])];
+                $request = $provider->buildReverseRequest(
+                    (float) $validated['lat'],
+                    (float) $validated['lon'],
+                    ['language' => $validated['language'] ?? null]
+                );
 
-                // Use lat and lon for reverse geocoding
-                $params['lat'] = $validated['lat'];
-                $params['lon'] = $validated['lon'];
-
-                if ($validated['language'] ?? null) {
-                    $params['accept-language'] = $validated['language'];
-                }
-
-                // Add API key if required
-                if (! empty($providerConfig['api_key'])) {
-                    $apiKeyParam = $providerConfig['api_key_param_name'] ?? 'api_key';
-                    $params[$apiKeyParam] = $providerConfig['api_key'];
-                }
-
-                // Make request
                 $response = Http::withHeaders([
                     'User-Agent' => config('app.name', 'Statamic'),
-                ])->get($url, $params);
+                ])->get($request['url'], $request['params']);
 
                 if (! $response->successful()) {
                     Log::warning('simple-address: reverse geocoding API request failed', [
-                        'provider' => $provider,
+                        'provider' => $providerName,
                         'lat' => $validated['lat'],
                         'lon' => $validated['lon'],
                         'status' => $response->status(),
-                        'url' => $url,
+                        'url' => $request['url'],
                         'response_body' => $response->body(),
                     ]);
 
                     throw new ProviderApiException('Provider API request failed', $response->status());
                 }
 
-                $apiResponse = $response->json();
-
-                // Nominatim reverse endpoint returns a single object, wrap it in array for transformer
-                // Check if response is a single result object (has lat/lon keys) vs already an array
-                if (is_array($apiResponse) && isset($apiResponse['lat']) && ! isset($apiResponse[0])) {
-                    // Single result from reverse - wrap it
-                    $apiResponse = [$apiResponse];
-                }
-
-                return $apiResponse;
+                return $response->json();
             });
 
             if ($cached['data'] === null) {
                 return response()->json(['results' => []], 200);
             }
 
-            $transformerClass = $providerConfig['transformer'];
-            $transformer = new $transformerClass($allExclusions);
-            $result = $transformer->transform($cached['data']);
-
+            $result = $provider->transformReverseResponse($cached['data']);
             $headers = $cached['cached'] ? ['X-Cache' => 'HIT'] : ['X-Cache' => 'MISS'];
 
             return response()->json($result->toArray(), 200, $headers);
+
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         } catch (ProviderApiException $e) {
             return response()->json([
                 'message' => $e->getMessage(),

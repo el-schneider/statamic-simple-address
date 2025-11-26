@@ -2,152 +2,48 @@
 
 return [
     /*
-     * Default geocoding provider for all Simple Address fields.
-     * Can be overridden per field in the field configuration.
-     */
+    |--------------------------------------------------------------------------
+    | Default Geocoding Provider
+    |--------------------------------------------------------------------------
+    |
+    | The default provider used for all Simple Address fields.
+    | Can be overridden per field in the field configuration.
+    |
+    | Supported: "nominatim", "geoapify", "google", "mapbox"
+    |
+    */
     'default_provider' => env('SIMPLE_ADDRESS_PROVIDER', 'nominatim'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Providers
+    |--------------------------------------------------------------------------
+    |
+    | Configure geocoding providers. Each provider specifies a class that
+    | handles request building, response transformation, and API specifics.
+    |
+    | Built-in providers work with zero config. Just set your API keys in .env:
+    |   - nominatim: Free, no key required (rate limited to 1 req/sec)
+    |   - geoapify: GEOAPIFY_API_KEY
+    |   - google: GOOGLE_GEOCODE_API_KEY
+    |   - mapbox: MAPBOX_ACCESS_TOKEN
+    |
+    | Override any default by adding config here. All keys are optional:
+    |   'nominatim' => [
+    |       'base_url' => 'https://my-nominatim-instance.com/search',
+    |   ],
+    |
+    | Custom providers:
+    |   'my_provider' => [
+    |       'class' => App\Providers\MyGeoProvider::class,
+    |       'api_key' => env('MY_PROVIDER_API_KEY'),
+    |   ],
+    |
+    */
     'providers' => [
-        'nominatim' => [
-            // Free OpenStreetMap geocoding. No API key required.
-            // Rate limit: 1 request/second. Backend enforces via min_debounce_delay.
-            // Docs: https://nominatim.org/
-            'min_debounce_delay' => 1000,
-            'base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org/search'),
-
-            // Reverse geocoding endpoint (lat/lon -> address)
-            'reverse_base_url' => env('NOMINATIM_REVERSE_BASE_URL', 'https://nominatim.openstreetmap.org/reverse'),
-
-            'freeform_search_key' => 'q',
-
-            // Parameters for forward search requests
-            'request_options' => [
-                'addressdetails' => '1',  // Include address components
-                'namedetails' => '1',     // Include name variants
-                'format' => 'json',
-            ],
-
-            // Parameters for reverse geocoding requests
-            // Nominatim reverse accepts different params than forward search
-            'reverse_request_options' => [
-                'format' => 'json',
-                'addressdetails' => '1',  // Include address components breakdown
-                'zoom' => '18',           // 18 = building level detail
-            ],
-            'display_field' => 'display_name',
-            'results_path' => '$[*]',
-            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\NominatimTransformer::class,
-            'default_exclude_fields' => [
-                'boundingbox',
-                'bbox',
-                'class',
-                'datasource',
-                'display_name',
-                'icon',
-                'importance',
-                'licence',
-                'osm_id',
-                'osm_type',
-                'other_names',
-                'place_id',
-                'rank',
-            ],
-        ],
-
-        'geoapify' => [
-            // Managed Nominatim service with higher reliability and better support.
-            // Requires API key: https://www.geoapify.com/
-            'min_debounce_delay' => 0,
-            'base_url' => env('GEOAPIFY_BASE_URL', 'https://api.geoapify.com/v1/geocode/search'),
-            'reverse_base_url' => env('GEOAPIFY_REVERSE_BASE_URL', 'https://api.geoapify.com/v1/geocode/reverse'),
-            'api_key' => env('GEOAPIFY_API_KEY'),
-            'api_key_param_name' => 'apiKey',
-            'freeform_search_key' => 'text',
-            'request_options' => [
-                'addressdetails' => '1',
-                'namedetails' => '1',
-                'format' => 'json',
-            ],
-            // Parameters for reverse geocoding requests
-            'reverse_request_options' => [
-                'format' => 'json',
-            ],
-            'display_field' => 'formatted',
-            'results_path' => '$.results[*]',
-            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GeoapifyTransformer::class,
-            'default_exclude_fields' => [
-                'bbox',
-                'geometry',
-                'place_id',
-                'query',
-                'rank',
-                'namedetails',
-            ],
-        ],
-
-        'geocodify' => [
-            // Alternative geocoding provider with global coverage.
-            // Requires API key: https://geocodify.com/
-            'min_debounce_delay' => 0,
-            'base_url' => env('GEOCODIFY_BASE_URL', 'https://api.geocodify.com/v2/geocode'),
-            'reverse_base_url' => env('GEOCODIFY_REVERSE_BASE_URL', 'https://api.geocodify.com/v2/geocode'),
-            'api_key' => env('GEOCODIFY_API_KEY'),
-            'api_key_param_name' => 'api_key',
-            'freeform_search_key' => 'q',
-            'request_options' => [
-                'addressdetails' => '1',
-                'namedetails' => '1',
-                'format' => 'json',
-            ],
-            // Parameters for reverse geocoding requests
-            'reverse_request_options' => [
-                'format' => 'json',
-            ],
-            'display_field' => 'label',
-            'results_path' => '$.response.features[*].properties',
-            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GeocodifyTransformer::class,
-            'default_exclude_fields' => [
-                'bbox',
-                'geometry',
-                'id',
-                'rank',
-            ],
-        ],
-
-        'google' => [
-            // Google Maps Geocoding API. Requires API key from Google Cloud Console.
-            // Docs: https://developers.google.com/maps/documentation/geocoding
-            'min_debounce_delay' => 0,
-            'base_url' => env('GOOGLE_GEOCODE_BASE_URL', 'https://maps.googleapis.com/maps/api/geocode/json'),
-            'api_key' => env('GOOGLE_GEOCODE_API_KEY'),
-            'api_key_param_name' => 'key',
-            'freeform_search_key' => 'address',
-            'request_options' => [],
-            'reverse_request_options' => [],  // Both forward and reverse use same endpoint
-            'display_field' => 'formatted_address',
-            'results_path' => '$.results[*]',
-            'transformer' => \ElSchneider\StatamicSimpleAddress\Transformers\GoogleTransformer::class,
-            'default_exclude_fields' => [
-                'address_components',
-                'geometry',
-                'place_id',
-            ],
-        ],
-
-        /*
-         * Custom providers can be added here. Example:
-         *
-         * 'my_provider' => [
-         *     'base_url' => env('MY_PROVIDER_BASE_URL'),
-         *     'api_key' => env('MY_PROVIDER_API_KEY'),
-         *     'api_key_param_name' => 'api_key',
-         *     'freeform_search_key' => 'q',
-         *     'request_options' => [
-         *         'format' => 'json',
-         *     ],
-         *     'display_field' => 'name',
-         *     'results_path' => '$.results',
-         * ],
-         */
+        'nominatim' => [],
+        'geoapify' => [],
+        'google' => [],
+        'mapbox' => [],
     ],
 ];
