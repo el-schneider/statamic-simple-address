@@ -24,11 +24,10 @@
 
       <!-- Location Data -->
       <pre
-        class="overflow-auto rounded border border-gray-200 bg-white p-4 text-gray-700"
+        class="address-yaml overflow-auto rounded border border-gray-200 bg-white p-4 text-gray-700"
         style="max-height: 200px; font-size: 10px"
-        >{{ JSON.stringify(address, null, 2) }}
-        </pre
-      >
+        v-html="formatAsYaml(address)"
+      />
     </div>
   </div>
 </template>
@@ -36,6 +35,7 @@
 <script>
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { formatAsYaml } from '../utils/yamlFormatter'
 
 export default {
   name: 'AddressDetailsPanel',
@@ -181,6 +181,8 @@ export default {
       const dir = type === 'lat' ? (num >= 0 ? 'N' : 'S') : num >= 0 ? 'E' : 'W'
       return `${Math.abs(num).toFixed(4)}° ${dir}`
     },
+
+    formatAsYaml,
   },
 }
 </script>
@@ -189,6 +191,10 @@ export default {
 pre {
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   line-height: 1.5;
+}
+
+.address-yaml :deep(.yaml-value) {
+  color: rgb(67 169 255);
 }
 </style>
 
