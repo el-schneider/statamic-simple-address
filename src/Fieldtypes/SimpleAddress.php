@@ -53,12 +53,6 @@ class SimpleAddress extends Fieldtype
                 'max' => 2000,
                 'required' => true,
             ],
-            'additional_exclude_fields' => [
-                'type' => 'taggable',
-                'display' => __('Additional Exclude Fields'),
-                'instructions' => __('Exclude additional fields from being saved, beyond the default exclusions. This keeps the stored data **simple** by only keeping essential information.'),
-                'width' => 50,
-            ],
         ];
     }
 
@@ -83,15 +77,9 @@ class SimpleAddress extends Fieldtype
         $providerName = $this->getActiveProvider();
         $provider = $providerService->resolveProvider($providerName);
 
-        $fieldLevelExclusions = $this->config('additional_exclude_fields') ?? [];
-        $provider->setExcludeFields($fieldLevelExclusions);
-
         return [
             'provider' => $providerName,
             'provider_min_debounce_delay' => $provider->getMinDebounceDelay(),
-            'default_exclude_fields' => $provider->getDefaultExcludeFields(),
-            'additional_exclude_fields' => $fieldLevelExclusions,
-            'all_exclude_fields' => $provider->getExcludeFields(),
         ];
     }
 

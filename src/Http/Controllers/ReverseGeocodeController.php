@@ -25,8 +25,6 @@ class ReverseGeocodeController
                 'lat' => 'required|numeric|between:-90,90',
                 'lon' => 'required|numeric|between:-180,180',
                 'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
-                'additional_exclude_fields' => 'array',
-                'additional_exclude_fields.*' => 'string',
                 'language' => 'string|nullable',
             ]);
         } catch (ValidationException $e) {
@@ -40,10 +38,6 @@ class ReverseGeocodeController
             $providerName = $validated['provider'];
             $provider = $this->providerService->resolveProvider($providerName);
             $this->providerService->validateApiKey($provider, $providerName);
-
-            if (! empty($validated['additional_exclude_fields'])) {
-                $provider->setExcludeFields($validated['additional_exclude_fields']);
-            }
 
             $cacheKeyData = [
                 'reverse' => true,

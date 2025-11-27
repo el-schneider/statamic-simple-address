@@ -14,7 +14,6 @@ class ReverseGeocodeControllerTest extends TestCase
         parent::setUp();
         Cache::flush();
 
-        // Create and authenticate a user for CP access
         $user = User::make()->email('test@example.com')->id('test-user')->makeSuper();
         $user->save();
         $this->actingAs($user);
@@ -24,11 +23,19 @@ class ReverseGeocodeControllerTest extends TestCase
     {
         Http::fake([
             'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
+                'osm_id' => 260029001,
                 'lat' => '51.5153449',
                 'lon' => '-0.0918298',
-                'display_name' => 'Corporation of London, England',
-                'address' => ['road' => 'Main Street', 'city' => 'London'],
+                'display_name' => 'City of London, Greater London, England, UK',
+                'address' => [
+                    'city' => 'City of London',
+                    'state' => 'England',
+                    'country' => 'United Kingdom',
+                    'country_code' => 'gb',
+                    'road' => 'Main Street',
+                    'house_number' => '10',
+                    'postcode' => 'EC2V 8AE',
+                ],
             ]),
         ]);
 
@@ -36,40 +43,41 @@ class ReverseGeocodeControllerTest extends TestCase
             'lat' => '51.5153449',
             'lon' => '-0.0918298',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        $response->assertSuccessful()
-            ->assertJsonStructure(['results' => [['label', 'lat', 'lon', 'address']]]);
+        $response->assertSuccessful();
+
+        $result = $response->json('results.0');
+        $this->assertEquals('260029001', $result['id']);
+        $this->assertEquals('City of London', $result['city']);
+        $this->assertEquals('England', $result['region']);
+        $this->assertEquals('United Kingdom', $result['country']);
+        $this->assertEquals('GB', $result['countryCode']);
+        $this->assertEquals('Main Street', $result['street']);
+        $this->assertEquals('10', $result['houseNumber']);
+        $this->assertEquals('EC2V 8AE', $result['postcode']);
     }
 
     public function test_reverse_geocoding_with_invalid_lat_returns_error()
     {
         $response = $this->postJson('/cp/simple-address/reverse', [
-            'lat' => '91',  // Invalid: > 90
+            'lat' => '91',
             'lon' => '-0.09',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('lat');
+        $response->assertStatus(422)->assertJsonValidationErrors('lat');
     }
 
     public function test_reverse_geocoding_with_invalid_lon_returns_error()
     {
         $response = $this->postJson('/cp/simple-address/reverse', [
             'lat' => '51.51',
-            'lon' => '181',  // Invalid: > 180
+            'lon' => '181',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('lon');
+        $response->assertStatus(422)->assertJsonValidationErrors('lon');
     }
 
     public function test_reverse_geocoding_with_invalid_provider_returns_error()
@@ -78,68 +86,15 @@ class ReverseGeocodeControllerTest extends TestCase
             'lat' => '51.51',
             'lon' => '-0.09',
             'provider' => 'invalid_provider',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('provider');
-    }
-
-    public function test_reverse_geocoding_applies_default_exclude_fields()
-    {
-        Http::fake([
-            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
-                'lat' => '51.51',
-                'lon' => '-0.09',
-                'display_name' => 'London',
-                'osm_id' => '123',  // Should be excluded by default
-                'address' => ['city' => 'London'],
-            ]),
-        ]);
-
-        $response = $this->postJson('/cp/simple-address/reverse', [
-            'lat' => '51.51',
-            'lon' => '-0.09',
-            'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
-        ]);
-
-        $response->assertSuccessful();
-        $this->assertArrayNotHasKey('osm_id', $response['results'][0]);
-    }
-
-    public function test_reverse_geocoding_applies_additional_exclude_fields()
-    {
-        Http::fake([
-            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
-                'lat' => '51.51',
-                'lon' => '-0.09',
-                'display_name' => 'London',
-                'address' => ['city' => 'London', 'postcode' => 'SW1A1AA'],
-            ]),
-        ]);
-
-        $response = $this->postJson('/cp/simple-address/reverse', [
-            'lat' => '51.51',
-            'lon' => '-0.09',
-            'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => ['place_id'],
-        ]);
-
-        $response->assertSuccessful();
-        $this->assertArrayNotHasKey('place_id', $response['results'][0]);
+        $response->assertStatus(422)->assertJsonValidationErrors('provider');
     }
 
     public function test_reverse_geocoding_caches_results()
     {
         Http::fake([
             'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
                 'lat' => '51.51',
                 'lon' => '-0.09',
                 'display_name' => 'London',
@@ -147,24 +102,18 @@ class ReverseGeocodeControllerTest extends TestCase
             ]),
         ]);
 
-        // First request
         $response1 = $this->postJson('/cp/simple-address/reverse', [
             'lat' => '51.51',
             'lon' => '-0.09',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
         $response1->assertHeader('X-Cache', 'MISS');
 
-        // Second request (same coords)
         $response2 = $this->postJson('/cp/simple-address/reverse', [
             'lat' => '51.51',
             'lon' => '-0.09',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
         $response2->assertHeader('X-Cache', 'HIT');
@@ -180,12 +129,9 @@ class ReverseGeocodeControllerTest extends TestCase
             'lat' => '51.51',
             'lon' => '-0.09',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        $response->assertStatus(502)
-            ->assertJsonPath('message', 'Provider API request failed');
+        $response->assertStatus(502)->assertJsonPath('message', 'Provider API request failed');
     }
 
     public function test_reverse_geocoding_with_missing_api_key_returns_error()
@@ -193,9 +139,7 @@ class ReverseGeocodeControllerTest extends TestCase
         $response = $this->postJson('/cp/simple-address/reverse', [
             'lat' => '51.51',
             'lon' => '-0.09',
-            'provider' => 'geoapify',  // Requires API key
-            'language' => 'en',
-            'additional_exclude_fields' => [],
+            'provider' => 'geoapify',
         ]);
 
         $response->assertStatus(400)
@@ -206,7 +150,6 @@ class ReverseGeocodeControllerTest extends TestCase
     {
         Http::fake([
             'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
                 'lat' => '51.51',
                 'lon' => '-0.09',
                 'display_name' => 'Londres',
@@ -219,22 +162,16 @@ class ReverseGeocodeControllerTest extends TestCase
             'lon' => '-0.09',
             'provider' => 'nominatim',
             'language' => 'fr',
-            'additional_exclude_fields' => [],
         ]);
 
         $response->assertSuccessful();
-        // Verify the request included language parameter
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'accept-language=fr');
-        });
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'accept-language=fr'));
     }
 
     public function test_reverse_geocoding_wraps_single_result_in_array()
     {
-        // Nominatim returns single object, should be wrapped for transformer
         Http::fake([
             'https://nominatim.openstreetmap.org/reverse*' => Http::response([
-                'place_id' => 260029001,
                 'lat' => '51.51',
                 'lon' => '-0.09',
                 'display_name' => 'London',
@@ -246,11 +183,8 @@ class ReverseGeocodeControllerTest extends TestCase
             'lat' => '51.51',
             'lon' => '-0.09',
             'provider' => 'nominatim',
-            'language' => 'en',
-            'additional_exclude_fields' => [],
         ]);
 
-        // Should return array of results (even though API returned single object)
         $response->assertSuccessful()
             ->assertJsonIsArray('results')
             ->assertJsonCount(1, 'results');

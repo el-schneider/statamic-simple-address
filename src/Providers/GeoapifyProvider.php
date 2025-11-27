@@ -12,18 +12,8 @@ class GeoapifyProvider extends AbstractProvider
 
     protected int $minDebounceDelay = 0;
 
-    protected array $defaultExcludeFields = [
-        'bbox',
-        'geometry',
-        'place_id',
-        'query',
-        'rank',
-        'namedetails',
-    ];
-
     public function __construct(array $config = [])
     {
-        // Set defaults from env before parent constructor
         $this->baseUrl = env('GEOAPIFY_BASE_URL', $this->baseUrl);
         $this->reverseBaseUrl = env('GEOAPIFY_REVERSE_BASE_URL', $this->reverseBaseUrl);
         $this->apiKey = env('GEOAPIFY_API_KEY');
@@ -33,10 +23,7 @@ class GeoapifyProvider extends AbstractProvider
 
     public function buildSearchRequest(string $query, array $options = []): array
     {
-        $params = [
-            'text' => $query,
-            'format' => 'json',
-        ];
+        $params = ['text' => $query, 'format' => 'json'];
 
         if (! empty($options['countries'])) {
             $params['filter'] = 'countrycode:'.implode(',', array_map('strtolower', $options['countries']));
@@ -50,19 +37,12 @@ class GeoapifyProvider extends AbstractProvider
             $params['apiKey'] = $this->apiKey;
         }
 
-        return [
-            'url' => $this->baseUrl,
-            'params' => $params,
-        ];
+        return ['url' => $this->baseUrl, 'params' => $params];
     }
 
     public function buildReverseRequest(float $lat, float $lon, array $options = []): array
     {
-        $params = [
-            'lat' => $lat,
-            'lon' => $lon,
-            'format' => 'json',
-        ];
+        $params = ['lat' => $lat, 'lon' => $lon, 'format' => 'json'];
 
         if (! empty($options['language'])) {
             $params['lang'] = $options['language'];
@@ -72,24 +52,34 @@ class GeoapifyProvider extends AbstractProvider
             $params['apiKey'] = $this->apiKey;
         }
 
-        return [
-            'url' => $this->getReverseBaseUrl(),
-            'params' => $params,
-        ];
+        return ['url' => $this->getReverseBaseUrl(), 'params' => $params];
     }
 
     public function transformResponse(array $rawResponse): SearchResponse
     {
         $items = $rawResponse['results'] ?? [];
-
-        $results = array_map(
-            fn (array $item) => $this->normalize(array_merge($item, [
-                'label' => $item['formatted'] ?? '',
-                'type' => $item['result_type'] ?? '',
-            ])),
-            $items
-        );
+        $results = array_map(fn ($item) => $this->mapItem($item), $items);
 
         return new SearchResponse($results);
+    }
+
+    protected function mapItem(array $item): \ElSchneider\StatamicSimpleAddress\Data\AddressResult
+    {
+        return $this->createResult(
+            label: $item['formatted'] ?? '',
+            lat: (string) ($item['lat'] ?? ''),
+            lon: (string) ($item['lon'] ?? ''),
+            data: [
+                'id' => $item['place_id'] ?? null,
+                'name' => $item['name'] ?? null,
+                'street' => $item['street'] ?? null,
+                'houseNumber' => $item['housenumber'] ?? null,
+                'postcode' => $item['postcode'] ?? null,
+                'city' => $item['city'] ?? null,
+                'region' => $item['state'] ?? null,
+                'country' => $item['country'] ?? null,
+                'countryCode' => isset($item['country_code']) ? strtoupper($item['country_code']) : null,
+            ],
+        );
     }
 }

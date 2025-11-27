@@ -8,22 +8,16 @@ readonly class AddressResult
         public string $label,
         public string $lat,
         public string $lon,
-        public string $type,
-        public string $name,
-        public array $address,
-        public array $additional = [],
+        public array $data = [],
     ) {}
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'label' => $this->label,
             'lat' => $this->lat,
             'lon' => $this->lon,
-            'type' => $this->type,
-            'name' => $this->name,
-            'address' => $this->address,
-            'additional' => $this->additional,
-        ];
+            ...$this->data,
+        ], fn ($v) => $v !== null && $v !== '');
     }
 }

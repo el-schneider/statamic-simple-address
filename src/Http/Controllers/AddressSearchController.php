@@ -24,8 +24,6 @@ class AddressSearchController
             $validated = $request->validate([
                 'query' => 'required|string|min:1|max:255',
                 'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
-                'additional_exclude_fields' => 'array',
-                'additional_exclude_fields.*' => 'string',
                 'countries' => 'array',
                 'countries.*' => 'string',
                 'language' => 'string|nullable',
@@ -41,10 +39,6 @@ class AddressSearchController
             $providerName = $validated['provider'];
             $provider = $this->providerService->resolveProvider($providerName);
             $this->providerService->validateApiKey($provider, $providerName);
-
-            if (! empty($validated['additional_exclude_fields'])) {
-                $provider->setExcludeFields($validated['additional_exclude_fields']);
-            }
 
             $cacheKeyData = [
                 'query' => $validated['query'],
@@ -66,7 +60,7 @@ class AddressSearchController
                 ]);
 
                 $response = Http::withHeaders([
-                    'User-Agent' => config('app.name', 'Statamic'),
+                    'User-Agent' => config('app.name', 'Statamic Simple Address'),
                 ])->get($request['url'], $request['params']);
 
                 if (! $response->successful()) {

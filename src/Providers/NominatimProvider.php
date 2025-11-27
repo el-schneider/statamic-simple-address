@@ -12,25 +12,8 @@ class NominatimProvider extends AbstractProvider
 
     protected int $minDebounceDelay = 1000;
 
-    protected array $defaultExcludeFields = [
-        'boundingbox',
-        'bbox',
-        'class',
-        'datasource',
-        'display_name',
-        'icon',
-        'importance',
-        'licence',
-        'osm_id',
-        'osm_type',
-        'other_names',
-        'place_id',
-        'rank',
-    ];
-
     public function __construct(array $config = [])
     {
-        // Set defaults from env before parent constructor
         $this->baseUrl = env('NOMINATIM_BASE_URL', $this->baseUrl);
         $this->reverseBaseUrl = env('NOMINATIM_REVERSE_BASE_URL', $this->reverseBaseUrl);
 
@@ -47,7 +30,6 @@ class NominatimProvider extends AbstractProvider
         $params = [
             'q' => $query,
             'addressdetails' => '1',
-            'namedetails' => '1',
             'format' => 'json',
         ];
 
@@ -59,10 +41,7 @@ class NominatimProvider extends AbstractProvider
             $params['accept-language'] = $options['language'];
         }
 
-        return [
-            'url' => $this->baseUrl,
-            'params' => $params,
-        ];
+        return ['url' => $this->baseUrl, 'params' => $params];
     }
 
     public function buildReverseRequest(float $lat, float $lon, array $options = []): array
@@ -79,29 +58,44 @@ class NominatimProvider extends AbstractProvider
             $params['accept-language'] = $options['language'];
         }
 
-        return [
-            'url' => $this->getReverseBaseUrl(),
-            'params' => $params,
-        ];
+        return ['url' => $this->getReverseBaseUrl(), 'params' => $params];
     }
 
     public function transformResponse(array $rawResponse): SearchResponse
     {
-        $results = array_map(
-            fn (array $item) => $this->normalize($item),
-            $rawResponse
-        );
+        $results = array_map(fn ($item) => $this->mapItem($item), $rawResponse);
 
         return new SearchResponse($results);
     }
 
     public function transformReverseResponse(array $rawResponse): SearchResponse
     {
-        // Nominatim reverse returns a single object, wrap for consistency
         if (isset($rawResponse['lat']) && ! isset($rawResponse[0])) {
             $rawResponse = [$rawResponse];
         }
 
         return $this->transformResponse($rawResponse);
+    }
+
+    protected function mapItem(array $item): \ElSchneider\StatamicSimpleAddress\Data\AddressResult
+    {
+        $addr = $item['address'] ?? [];
+
+        return $this->createResult(
+            label: $item['display_name'] ?? '',
+            lat: (string) ($item['lat'] ?? ''),
+            lon: (string) ($item['lon'] ?? ''),
+            data: [
+                'id' => isset($item['osm_id']) ? (string) $item['osm_id'] : null,
+                'name' => $item['name'] ?? null,
+                'street' => $addr['road'] ?? null,
+                'houseNumber' => $addr['house_number'] ?? null,
+                'postcode' => $addr['postcode'] ?? null,
+                'city' => $addr['city'] ?? $addr['town'] ?? $addr['village'] ?? $addr['municipality'] ?? null,
+                'region' => $addr['state'] ?? null,
+                'country' => $addr['country'] ?? null,
+                'countryCode' => isset($addr['country_code']) ? strtoupper($addr['country_code']) : null,
+            ],
+        );
     }
 }

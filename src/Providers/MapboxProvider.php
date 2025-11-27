@@ -4,24 +4,11 @@ namespace ElSchneider\StatamicSimpleAddress\Providers;
 
 use ElSchneider\StatamicSimpleAddress\Data\SearchResponse;
 
-/**
- * Mapbox Geocoding API provider.
- *
- * @see https://docs.mapbox.com/api/search/geocoding/
- */
 class MapboxProvider extends AbstractProvider
 {
     protected string $baseUrl = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
 
     protected int $minDebounceDelay = 0;
-
-    protected array $defaultExcludeFields = [
-        'id',
-        'geometry',
-        'properties',
-        'relevance',
-        'bbox',
-    ];
 
     public function __construct(array $config = [])
     {
@@ -33,12 +20,8 @@ class MapboxProvider extends AbstractProvider
 
     public function buildSearchRequest(string $query, array $options = []): array
     {
-        // Mapbox uses the query in the URL path
         $url = $this->baseUrl.'/'.urlencode($query).'.json';
-
-        $params = [
-            'access_token' => $this->apiKey,
-        ];
+        $params = ['access_token' => $this->apiKey];
 
         if (! empty($options['countries'])) {
             $params['country'] = implode(',', array_map('strtolower', $options['countries']));
@@ -48,76 +31,66 @@ class MapboxProvider extends AbstractProvider
             $params['language'] = $options['language'];
         }
 
-        return [
-            'url' => $url,
-            'params' => $params,
-        ];
+        return ['url' => $url, 'params' => $params];
     }
 
     public function buildReverseRequest(float $lat, float $lon, array $options = []): array
     {
-        // Mapbox reverse uses coordinates in the URL path
         $url = $this->baseUrl."/{$lon},{$lat}.json";
-
-        $params = [
-            'access_token' => $this->apiKey,
-        ];
+        $params = ['access_token' => $this->apiKey];
 
         if (! empty($options['language'])) {
             $params['language'] = $options['language'];
         }
 
-        return [
-            'url' => $url,
-            'params' => $params,
-        ];
+        return ['url' => $url, 'params' => $params];
     }
 
     public function transformResponse(array $rawResponse): SearchResponse
     {
         $items = $rawResponse['features'] ?? [];
-
-        $results = array_map(
-            fn (array $item) => $this->normalize($this->mapMapboxResponse($item)),
-            $items
-        );
+        $results = array_map(fn ($item) => $this->mapItem($item), $items);
 
         return new SearchResponse($results);
     }
 
-    /**
-     * Map Mapbox's GeoJSON response structure to normalized format.
-     */
-    private function mapMapboxResponse(array $item): array
+    protected function mapItem(array $item): \ElSchneider\StatamicSimpleAddress\Data\AddressResult
     {
         $coords = $item['geometry']['coordinates'] ?? [null, null];
-        $context = $this->parseContext($item['context'] ?? []);
+        $c = $this->parseContext($item['context'] ?? []);
 
-        return [
-            'label' => $item['place_name'] ?? '',
-            'lat' => (string) ($coords[1] ?? ''),
-            'lon' => (string) ($coords[0] ?? ''),
-            'type' => $item['place_type'][0] ?? '',
-            'name' => $item['text'] ?? '',
-            'address' => $context,
-        ];
+        return $this->createResult(
+            label: $item['place_name'] ?? '',
+            lat: (string) ($coords[1] ?? ''),
+            lon: (string) ($coords[0] ?? ''),
+            data: [
+                'id' => $item['id'] ?? null,
+                'name' => $item['text'] ?? null,
+                'street' => $c['address'] ?? null,
+                'houseNumber' => $item['address'] ?? null,
+                'postcode' => $c['postcode'] ?? null,
+                'city' => $c['place'] ?? null,
+                'region' => $c['region'] ?? null,
+                'country' => $c['country'] ?? null,
+                'countryCode' => isset($c['country_code']) ? strtoupper($c['country_code']) : null,
+            ],
+        );
     }
 
-    /**
-     * Parse Mapbox context array into address components.
-     */
     private function parseContext(array $context): array
     {
-        $address = [];
+        $result = [];
 
         foreach ($context as $item) {
-            // Context items have IDs like "place.123", "region.456", etc.
             $type = explode('.', $item['id'] ?? '')[0];
             if ($type) {
-                $address[$type] = $item['text'] ?? '';
+                $result[$type] = $item['text'] ?? '';
+                if ($type === 'country' && isset($item['short_code'])) {
+                    $result['country_code'] = $item['short_code'];
+                }
             }
         }
 
-        return $address;
+        return $result;
     }
 }

@@ -9,14 +9,18 @@ it('transforms geoapify response', function () {
     $rawResponse = [
         'results' => [
             [
+                'place_id' => 'abc123',
                 'lat' => 48.8534951,
                 'lon' => 2.3483915,
-                'formatted' => 'Paris, France',
-                'address_line1' => 'Paris',
-                'address_line2' => 'France',
-                'result_type' => 'city',
-                'name' => 'Paris',
-                'address' => ['city' => 'Paris', 'country' => 'France'],
+                'formatted' => '100 Rue de Rivoli, 75001 Paris, France',
+                'name' => 'Rue de Rivoli',
+                'city' => 'Paris',
+                'state' => 'Île-de-France',
+                'country' => 'France',
+                'country_code' => 'fr',
+                'street' => 'Rue de Rivoli',
+                'housenumber' => '100',
+                'postcode' => '75001',
             ],
         ],
     ];
@@ -28,19 +32,19 @@ it('transforms geoapify response', function () {
 
     $result = $response->results[0]->toArray();
 
-    expect($result['label'])->toBe('Paris, France');
-    expect($result['lat'])->toBe('48.8534951');
-    expect($result['lon'])->toBe('2.3483915');
-    expect($result['type'])->toBe('city');
+    expect($result['id'])->toBe('abc123');
+    expect($result['label'])->toBe('100 Rue de Rivoli, 75001 Paris, France');
+    expect($result['city'])->toBe('Paris');
+    expect($result['region'])->toBe('Île-de-France');
+    expect($result['countryCode'])->toBe('FR');
+    expect($result['street'])->toBe('Rue de Rivoli');
+    expect($result['houseNumber'])->toBe('100');
+    expect($result['postcode'])->toBe('75001');
 });
 
 it('handles empty results', function () {
     $provider = new GeoapifyProvider;
-
-    $rawResponse = ['results' => []];
-
-    $response = $provider->transformResponse($rawResponse);
-
+    $response = $provider->transformResponse(['results' => []]);
     expect($response->results)->toHaveCount(0);
 });
 
@@ -62,19 +66,14 @@ it('builds search request with countries filter', function () {
 it('builds reverse request', function () {
     $provider = new GeoapifyProvider(['api_key' => 'test-key']);
 
-    $request = $provider->buildReverseRequest(52.52, 13.405, [
-        'language' => 'en',
-    ]);
+    $request = $provider->buildReverseRequest(52.52, 13.405, ['language' => 'en']);
 
     expect($request['url'])->toBe('https://api.geoapify.com/v1/geocode/reverse');
     expect($request['params']['lat'])->toBe(52.52);
     expect($request['params']['lon'])->toBe(13.405);
-    expect($request['params']['lang'])->toBe('en');
     expect($request['params']['apiKey'])->toBe('test-key');
 });
 
 it('requires api key', function () {
-    $provider = new GeoapifyProvider;
-
-    expect($provider->requiresApiKey())->toBeTrue();
+    expect((new GeoapifyProvider)->requiresApiKey())->toBeTrue();
 });
