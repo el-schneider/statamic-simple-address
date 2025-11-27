@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <!-- Map Container -->
-    <div class="flex flex-col overflow-hidden rounded" style="gap: 4px">
+    <div class="mt-1 flex flex-col gap-1 overflow-hidden rounded">
       <div class="relative">
         <div ref="mapContainer" class="w-full border bg-gray-100" style="aspect-ratio: 16 / 9" />
         <!-- Coordinates overlay -->

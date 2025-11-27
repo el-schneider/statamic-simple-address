@@ -1,37 +1,32 @@
 <template>
   <div>
-    <!-- Address Select -->
-    <v-select
-      ref="select"
-      :value="value"
-      :filterable="false"
-      :options="options"
-      :placeholder="config.placeholder"
-      :components="selectComponents"
-      append-to-body
-      :no-drop="!options.length"
-      @search="onSearch"
-      @input="setSelected"
-    >
-      <template #option="{ label }">
-        <div v-text="label" />
-      </template>
-      <template #selected-option="{ label }">
-        <div v-text="label" />
-      </template>
-      <template #no-options>
-        <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
-      </template>
-    </v-select>
-
-    <!-- Details Toggle Button -->
-    <div class="mb-2 mt-0.5 flex justify-end text-right">
-      <button
-        v-if="value"
-        type="button"
-        class="text-blue mr-1 whitespace-nowrap text-xs underline hover:text-blue-800"
-        @click="toggleDetails"
+    <!-- Address Select with inline details button -->
+    <div class="simple-address-select-wrapper">
+      <v-select
+        ref="select"
+        :value="value"
+        :filterable="false"
+        :options="options"
+        :placeholder="config.placeholder"
+        :components="selectComponents"
+        append-to-body
+        :no-drop="!options.length"
+        @search="onSearch"
+        @input="setSelected"
       >
+        <template #option="{ label }">
+          <div v-text="label" />
+        </template>
+        <template #selected-option="{ label }">
+          <div v-text="label" />
+        </template>
+        <template #no-options>
+          <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
+        </template>
+      </v-select>
+
+      <!-- Details Toggle Button (inside select) -->
+      <button v-if="value" type="button" class="simple-address-details-btn" @click.stop="toggleDetails">
         {{ detailsButtonText }}
       </button>
     </div>
@@ -257,5 +252,36 @@ export default {
 /* Remove webkit search cancel button */
 :deep(.vs__search::-webkit-search-cancel-button) {
   appearance: none;
+}
+
+/* Select wrapper for positioning details button */
+.simple-address-select-wrapper {
+  position: relative;
+}
+
+/* Details button positioned inside the select */
+.simple-address-details-btn {
+  position: absolute;
+  top: 50%;
+  right: 22px; /* Space for deselect button */
+  transform: translateY(-50%);
+  z-index: 1;
+  padding: 2px 8px 1px 8px;
+  font-size: 12px;
+  color: rgb(67 169 255);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff 15%, #fff 100%);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.simple-address-details-btn:hover {
+  color: rgb(47 149 235);
+  text-decoration: underline;
+}
+
+/* Ensure selected option doesn't overlap with details button */
+:deep(.vs__selected) {
+  padding-right: 60px;
 }
 </style>
