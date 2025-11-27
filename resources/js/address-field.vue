@@ -225,9 +225,10 @@ export default {
           this.update(results[0])
           this.$toast.success(this.__('Address updated from map'))
         } else {
-          // No results found - revert marker position
-          this.$toast.error(this.__('No address found at this location'))
-          this.$refs.detailsPanel?.revertMarkerPosition()
+          // No address found - keep existing data but update coordinates
+          // The user's position choice is always respected
+          this.updateCoordinatesOnly(lat, lon)
+          this.$toast.info(this.__('Coordinates updated'))
         }
       } catch (error) {
         console.error('Reverse geocoding failed:', error)
@@ -235,6 +236,17 @@ export default {
         this.$toast.error(this.__(message))
         // Revert marker on error
         this.$refs.detailsPanel?.revertMarkerPosition()
+      }
+    },
+
+    updateCoordinatesOnly(lat, lon) {
+      const currentValue = this.value?.value || this.value
+      if (currentValue) {
+        this.update({
+          ...currentValue,
+          lat,
+          lon,
+        })
       }
     },
   },
