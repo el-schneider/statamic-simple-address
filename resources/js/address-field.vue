@@ -29,7 +29,7 @@
       <button
         v-if="value"
         type="button"
-        class="mr-1 text-xs hover:text-blue-700 hover:underline"
+        class="text-blue mr-1 whitespace-nowrap text-xs underline hover:text-blue-800"
         @click="toggleDetails"
       >
         {{ detailsButtonText }}
