@@ -4,6 +4,7 @@ namespace ElSchneider\StatamicSimpleAddress;
 
 use ElSchneider\StatamicSimpleAddress\Fieldtypes\SimpleAddress;
 use ElSchneider\StatamicSimpleAddress\Http\Controllers\GeocodingController;
+use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Illuminate\Support\Facades\Route;
 use Statamic\Providers\AddonServiceProvider;
 
@@ -19,6 +20,13 @@ class ServiceProvider extends AddonServiceProvider
         ],
         'publicDirectory' => 'resources/dist',
     ];
+
+    public function register()
+    {
+        parent::register();
+
+        $this->app->singleton(GeocodingService::class);
+    }
 
     public function bootAddon()
     {
