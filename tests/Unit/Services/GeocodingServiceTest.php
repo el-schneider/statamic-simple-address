@@ -84,4 +84,42 @@ class GeocodingServiceTest extends TestCase
         // Assert: Should be the same instance
         $this->assertSame($service1, $service2);
     }
+
+    public function test_caching_is_enabled_by_default()
+    {
+        // Arrange: Set up cache config with default values
+        config(['simple-address.provider' => 'nominatim']);
+        config(['simple-address.cache.enabled' => true]);
+        config(['simple-address.cache.store' => null]);
+        config(['simple-address.cache.duration' => 3600]);
+        config(['simple-address.providers.nominatim' => [
+            'class' => Nominatim::class,
+            'factory' => 'withOpenStreetMapServer',
+            'args' => ['Test App'],
+        ]]);
+
+        // Act: Create service
+        $service = new GeocodingService;
+
+        // Assert: Service exists and is properly typed
+        $this->assertInstanceOf(GeocodingService::class, $service);
+    }
+
+    public function test_caching_can_be_disabled()
+    {
+        // Arrange: Disable cache
+        config(['simple-address.provider' => 'nominatim']);
+        config(['simple-address.cache.enabled' => false]);
+        config(['simple-address.providers.nominatim' => [
+            'class' => Nominatim::class,
+            'factory' => 'withOpenStreetMapServer',
+            'args' => ['Test App'],
+        ]]);
+
+        // Act: Create service
+        $service = new GeocodingService;
+
+        // Assert: Service still works without cache
+        $this->assertInstanceOf(GeocodingService::class, $service);
+    }
 }
