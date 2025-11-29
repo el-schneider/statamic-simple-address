@@ -3,7 +3,7 @@
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
 use ElSchneider\StatamicSimpleAddress\Data\AddressResult;
-use Geocoder\Provider\Nominatim\Nominatim;
+use Geocoder\Provider\Cache\ProviderCache;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
@@ -15,9 +15,16 @@ class GeocodingService
 
     public function __construct()
     {
-        $httpClient = new Client;
-        $userAgent = config('app.name', 'Statamic Simple Address');
-        $provider = Nominatim::withOpenStreetMapServer($httpClient, $userAgent);
+        $provider = $this->buildProvider();
+
+        // Wrap with caching if enabled
+        if (config('simple-address.cache.enabled')) {
+            $provider = new ProviderCache(
+                $provider,
+                app('cache')->store(config('simple-address.cache.store')),
+                config('simple-address.cache.duration')
+            );
+        }
 
         $this->geocoder = new StatefulGeocoder($provider, 'en');
     }
@@ -50,6 +57,37 @@ class GeocodingService
             ),
             $results->all()
         );
+    }
+
+    private function buildProvider()
+    {
+        $providerName = config('simple-address.provider');
+        $providerConfig = config("simple-address.providers.{$providerName}");
+
+        if (! $providerConfig) {
+            throw new \InvalidArgumentException(
+                "Provider '{$providerName}' is not configured in simple-address config."
+            );
+        }
+
+        $class = $providerConfig['class'];
+        $httpClient = new Client;
+        $args = $this->getConstructorArgs($providerConfig);
+
+        // If provider has a factory method
+        if (isset($providerConfig['factory'])) {
+            $factory = $providerConfig['factory'];
+
+            return $class::$factory($httpClient, ...$args);
+        }
+
+        // Standard instantiation
+        return new $class($httpClient, ...$args);
+    }
+
+    private function getConstructorArgs(array $config): array
+    {
+        return $config['args'] ?? [];
     }
 
     private function formatAddressLabel($location): string
