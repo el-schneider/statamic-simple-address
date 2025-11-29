@@ -8,6 +8,9 @@ use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use Illuminate\Support\Facades\Log;
 
 class GeocodingService
 {
@@ -71,7 +74,7 @@ class GeocodingService
         }
 
         $class = $providerConfig['class'];
-        $httpClient = new Client;
+        $httpClient = $this->createHttpClient();
         $args = $this->getConstructorArgs($providerConfig);
 
         // If provider has a factory method
@@ -83,6 +86,29 @@ class GeocodingService
 
         // Standard instantiation
         return new $class($httpClient, ...$args);
+    }
+
+    private function createHttpClient(): Client
+    {
+        $config = [];
+
+        if (config('app.debug')) {
+            $stack = HandlerStack::create();
+            $stack->push(Middleware::tap(function ($request) {
+                Log::debug('Guzzle request', [
+                    'method' => $request->getMethod(),
+                    'url' => (string) $request->getUri(),
+                    'headers' => $request->getHeaders(),
+                    'body' => $request->getBody()->getContents(),
+                ]);
+                // Reset stream position after logging
+                $request->getBody()->rewind();
+            }));
+
+            $config['handler'] = $stack;
+        }
+
+        return new Client($config);
     }
 
     private function getConstructorArgs(array $config): array
