@@ -3,41 +3,51 @@
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan
 > task-by-task.
 
-**Goal:** Replace custom provider abstraction with Geocoder library, consolidate to single global
-provider, and simplify controller and fieldtype.
+**Goal:** Replace custom provider abstraction with official Geocoder library (Nominatim default),
+consolidate to single global provider, and simplify controller and fieldtype.
 
-**Architecture:** GeocodingService becomes a thin Geocoder wrapper returning raw Address objects.
-Controller validates input and filters results. SimpleAddress fieldtype removes provider selector.
-Fixture generator saves raw results for testing all providers.
+**Architecture:** GeocodingService becomes a thin wrapper around Geocoder's official providers
+returning raw Address objects. Users can install additional official providers via Composer and
+switch via config. Controller validates input and filters results. SimpleAddress fieldtype removes
+provider selector.
 
-**Tech Stack:** Geocoder library, Laravel HTTP, Pest for testing
+**Tech Stack:** `geocoder-php/nominatim-provider`, `guzzlehttp/guzzle`, Pest for testing
+
+**Provider Support:** Nominatim by default. Users can install any official `geocoder-php/*-provider`
+package and switch via config (e.g., Google Maps, MapBox, OpenCage).
 
 ---
 
-## Task 1: Install Geocoder Library
+## Task 1: Install Geocoder with Nominatim Provider
 
 **Files:**
 
 - Modify: `composer.json`
 
-**Step 1: Add Geocoder package**
+**Step 1: Add Nominatim and Guzzle**
 
-Run: `composer require geocoder-php/geocoder`
+Run:
 
-This adds the Geocoder library as a dependency. The main package handles initialization and
-provider registration.
+```bash
+composer require geocoder-php/nominatim-provider guzzlehttp/guzzle
+```
+
+This installs:
+
+- `geocoder-php/nominatim-provider` (pulls in core Geocoder)
+- `guzzlehttp/guzzle` (PSR-18 HTTP client)
 
 **Step 2: Verify installation**
 
-Run: `composer show geocoder-php/geocoder`
+Run: `composer show geocoder-php/nominatim-provider`
 
-Expected: Shows Geocoder library version info
+Expected: Shows nominatim-provider version info
 
 **Step 3: Commit**
 
 ```bash
 git add composer.json composer.lock
-git commit -m "chore: add geocoder-php/geocoder dependency"
+git commit -m "chore: add geocoder-php/nominatim-provider and guzzlehttp/guzzle"
 ```
 
 ---
@@ -48,8 +58,6 @@ git commit -m "chore: add geocoder-php/geocoder dependency"
 
 - Create: `src/Exceptions/GeocodingApiException.php`
 - Create: `src/Exceptions/ConfigurationException.php`
-- Modify: `src/Exceptions/ProviderApiException.php` (rename to GeocodingApiException, or keep both
-  during transition)
 
 **Step 1: Create GeocodingApiException**
 
@@ -141,7 +149,7 @@ class GeocodingServiceTest extends TestCase
         $this->assertGreaterThan(0, count($result));
     }
 
-    public function test_search_throws_configuration_exception_on_missing_provider()
+    public function test_search_throws_configuration_exception_on_invalid_provider()
     {
         config(['simple-address.provider' => 'nonexistent']);
 
@@ -162,7 +170,7 @@ class GeocodingServiceTest extends TestCase
         $this->assertGreaterThan(0, count($result));
     }
 
-    public function test_reverse_throws_configuration_exception_on_missing_provider()
+    public function test_reverse_throws_configuration_exception_on_invalid_provider()
     {
         config(['simple-address.provider' => 'nonexistent']);
 
@@ -178,7 +186,7 @@ class GeocodingServiceTest extends TestCase
 
 Run: `./vendor/bin/pest tests/Unit/Services/GeocodingServiceTest.php -v`
 
-Expected: All tests fail with "GeocodingService not found" or missing methods
+Expected: All tests fail with missing methods or class
 
 **Step 3: Rewrite GeocodingService**
 
@@ -194,23 +202,16 @@ use ElSchneider\StatamicSimpleAddress\Exceptions\GeocodingApiException;
 use Geocoder\Collection;
 use Geocoder\Exception\Exception as GeocoderException;
 use Geocoder\Provider\Provider;
-use Geocoder\ProviderAggregator;
-use Http\Adapter\Guzzle7\Client as GuzzleAdapter;
+use GuzzleHttp\Client;
 
 class GeocodingService
 {
-    private ProviderAggregator $geocoder;
+    private Provider $provider;
 
     public function __construct()
     {
-        $this->geocoder = new ProviderAggregator();
-        $httpClient = new GuzzleAdapter();
-
-        $this->geocoder->registerProviders([
-            $this->createNominatimProvider($httpClient),
-            $this->createGeoapifyProvider($httpClient),
-            $this->createGoogleProvider($httpClient),
-        ]);
+        $providerName = config('simple-address.provider', 'nominatim');
+        $this->provider = $this->createProvider($providerName);
     }
 
     /**
@@ -218,10 +219,8 @@ class GeocodingService
      */
     public function search(string $query, array $options = []): Collection
     {
-        $provider = $this->getActiveProvider();
-
         try {
-            return $this->geocoder->using($provider)->geocodeQuery(
+            return $this->provider->geocodeQuery(
                 \Geocoder\Query\GeocodeQuery::create($query)
                     ->withCountries($options['countries'] ?? [])
                     ->withLocale($options['language'] ?? null)
@@ -240,10 +239,8 @@ class GeocodingService
      */
     public function reverse(float $lat, float $lon, array $options = []): Collection
     {
-        $provider = $this->getActiveProvider();
-
         try {
-            return $this->geocoder->using($provider)->reverseQuery(
+            return $this->provider->reverseQuery(
                 \Geocoder\Query\ReverseQuery::create($lat, $lon)
                     ->withLocale($options['language'] ?? null)
             );
@@ -257,33 +254,26 @@ class GeocodingService
     }
 
     /**
-     * Get available provider names
+     * Create the configured provider instance
      */
-    public function getAvailableProviders(): array
+    private function createProvider(string $providerName): Provider
     {
-        return ['nominatim', 'geoapify', 'google'];
-    }
+        $httpClient = new Client();
 
-    /**
-     * Get the active provider name from config
-     */
-    private function getActiveProvider(): string
-    {
-        $provider = config('simple-address.provider');
-
-        if (!$provider || !in_array($provider, $this->getAvailableProviders())) {
-            throw new ConfigurationException(
-                sprintf('Invalid or missing provider: %s', $provider)
-            );
-        }
-
-        return $provider;
+        return match ($providerName) {
+            'nominatim' => $this->createNominatimProvider($httpClient),
+            'google' => $this->createGoogleProvider($httpClient),
+            'mapbox' => $this->createMapboxProvider($httpClient),
+            default => throw new ConfigurationException(
+                sprintf('Unknown or unsupported provider: %s. Supported providers: nominatim, google, mapbox', $providerName)
+            ),
+        };
     }
 
     /**
      * Create Nominatim provider
      */
-    private function createNominatimProvider($httpClient): Provider
+    private function createNominatimProvider(Client $httpClient): Provider
     {
         return new \Geocoder\Provider\Nominatim\Nominatim(
             $httpClient,
@@ -292,37 +282,31 @@ class GeocodingService
     }
 
     /**
-     * Create Geoapify provider
+     * Create Google Maps provider
      */
-    private function createGeoapifyProvider($httpClient): Provider
-    {
-        $apiKey = config('simple-address.providers.geoapify.api_key');
-
-        if (!$apiKey) {
-            throw new ConfigurationException('Geoapify API key not configured');
-        }
-
-        return new \Geocoder\Provider\Geoapify\Geoapify(
-            $httpClient,
-            $apiKey
-        );
-    }
-
-    /**
-     * Create Google provider
-     */
-    private function createGoogleProvider($httpClient): Provider
+    private function createGoogleProvider(Client $httpClient): Provider
     {
         $apiKey = config('simple-address.providers.google.api_key');
 
         if (!$apiKey) {
-            throw new ConfigurationException('Google API key not configured');
+            throw new ConfigurationException('Google Maps API key not configured. Set GOOGLE_MAPS_API_KEY env var.');
         }
 
-        return new \Geocoder\Provider\GoogleMaps\GoogleMaps(
-            $httpClient,
-            $apiKey
-        );
+        return new \Geocoder\Provider\GoogleMaps\GoogleMaps($httpClient, $apiKey);
+    }
+
+    /**
+     * Create MapBox provider
+     */
+    private function createMapboxProvider(Client $httpClient): Provider
+    {
+        $apiKey = config('simple-address.providers.mapbox.api_key');
+
+        if (!$apiKey) {
+            throw new ConfigurationException('MapBox API key not configured. Set MAPBOX_API_KEY env var.');
+        }
+
+        return new \Geocoder\Provider\Mapbox\Mapbox($httpClient, $apiKey);
     }
 }
 ```
@@ -331,13 +315,13 @@ class GeocodingService
 
 Run: `./vendor/bin/pest tests/Unit/Services/GeocodingServiceTest.php -v`
 
-Expected: Tests pass (may need live API calls or fixtures for integration tests)
+Expected: Tests pass
 
 **Step 5: Commit**
 
 ```bash
 git add src/Services/GeocodingService.php tests/Unit/Services/GeocodingServiceTest.php
-git commit -m "refactor: rewrite GeocodingService to use Geocoder library"
+git commit -m "refactor: rewrite GeocodingService to use Geocoder library with Nominatim"
 ```
 
 ---
@@ -388,18 +372,6 @@ class GeocodingControllerTest extends TestCase
                 '*' => ['label', 'lat', 'lon']
             ]
         ]);
-    }
-
-    public function test_search_returns_cache_headers()
-    {
-        config(['simple-address.provider' => 'nominatim']);
-
-        $response = $this->postJson('/cp/simple-address/search', [
-            'query' => 'Berlin, Germany',
-        ]);
-
-        $response->assertStatus(200);
-        $this->assertIn($response->headers->get('X-Cache'), ['HIT', 'MISS']);
     }
 }
 ```
@@ -463,7 +435,6 @@ class GeocodingController
                     'label' => $address->getDisplayName(),
                     'lat' => (string) $address->getCoordinates()->getLatitude(),
                     'lon' => (string) $address->getCoordinates()->getLongitude(),
-                    'type' => null,
                     'name' => $address->getStreetName() ?? null,
                     'address' => [
                         'street' => $address->getStreetName(),
@@ -531,7 +502,6 @@ class GeocodingController
                     'label' => $address->getDisplayName(),
                     'lat' => (string) $address->getCoordinates()->getLatitude(),
                     'lon' => (string) $address->getCoordinates()->getLongitude(),
-                    'type' => null,
                     'name' => $address->getStreetName() ?? null,
                     'address' => [
                         'street' => $address->getStreetName(),
@@ -596,7 +566,7 @@ git commit -m "refactor: simplify GeocodingController to use single global provi
 
 - Modify: `src/Fieldtypes/SimpleAddress.php`
 
-**Step 1: Remove provider dropdown**
+**Step 1: Remove provider dropdown and simplify**
 
 In `src/Fieldtypes/SimpleAddress.php`, update `configFieldItems()`:
 
@@ -625,11 +595,11 @@ protected function configFieldItems(): array
         'debounce_delay' => [
             'type' => 'integer',
             'display' => __('Search Debounce Delay'),
-            'instructions' => __('Delay in milliseconds before triggering search requests. This is a frontend optimization to reduce API calls while typing. The backend enforces each provider\'s minimum delay requirement automatically.'),
+            'instructions' => __('Delay in milliseconds before triggering search requests. Nominatim requires at least 1000ms between requests.'),
             'width' => 50,
-            'default' => 300,
-            'min' => 100,
-            'max' => 2000,
+            'default' => 1000,
+            'min' => 1000,
+            'max' => 5000,
             'required' => true,
         ],
     ];
@@ -643,12 +613,8 @@ Update `preload()` method:
 ```php
 public function preload(): array
 {
-    $geocodingService = app(GeocodingService::class);
-    $provider = config('simple-address.provider', 'nominatim');
-
     return [
-        'provider' => $provider,
-        'provider_min_debounce_delay' => 1000, // Nominatim default
+        'provider_min_debounce_delay' => 1000, // Nominatim minimum
     ];
 }
 ```
@@ -668,86 +634,162 @@ git commit -m "refactor: simplify SimpleAddress fieldtype, remove provider selec
 
 ---
 
-## Task 6: Update Fixture Generator
+## Task 6: Update and Simplify Fixture Generator
 
 **Files:**
 
 - Modify: `scripts/generate-fixtures.php`
 
-**Step 1: Update FixtureGenerator to use new service**
+**Step 1: Simplify to Nominatim only**
 
-Replace the fixture generation methods in `scripts/generate-fixtures.php`:
+Replace `scripts/generate-fixtures.php`:
 
 ```php
-private function generateSearchFixture(string $provider): void
-{
-    $previousProvider = config('simple-address.provider');
-    config(['simple-address.provider' => $provider]);
+#!/usr/bin/env php
+<?php
 
-    $result = $this->geocoding->search($this->searchQuery, ['countries' => []]);
+/**
+ * Generate API response fixtures for Nominatim geocoding provider.
+ *
+ * Usage:
+ *   php scripts/generate-fixtures.php
+ *
+ * Environment variables (set in .env or export):
+ *   APP_NAME - Application name (used for Nominatim User-Agent)
+ *
+ * The script saves raw Geocoder results as JSON fixtures in tests/__fixtures__/providers/
+ */
 
-    $filename = $this->saveFixture($provider, 'search', 'berlin_germany', $result);
+require_once __DIR__.'/../vendor/autoload.php';
 
-    echo "   ✓ {$filename}\n";
+use Dotenv\Dotenv;
+use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 
-    config(['simple-address.provider' => $previousProvider]);
+// Load .env if it exists
+if (file_exists(__DIR__.'/../.env')) {
+    $dotenv = Dotenv::createImmutable(__DIR__.'/..');
+    $dotenv->safeLoad();
 }
 
-private function generateReverseFixture(string $provider): void
+class FixtureGenerator
 {
-    $previousProvider = config('simple-address.provider');
-    config(['simple-address.provider' => $provider]);
+    private string $fixturesPath;
 
-    $result = $this->geocoding->reverse($this->reverseLat, $this->reverseLon, []);
+    private GeocodingService $geocoding;
 
-    $filename = $this->saveFixture($provider, 'reverse', 'berlin', $result);
+    private string $searchQuery = 'Berlin, Germany';
 
-    echo "   ✓ {$filename}\n";
+    private float $reverseLat = 52.5200;
 
-    config(['simple-address.provider' => $previousProvider]);
-}
+    private float $reverseLon = 13.4050;
 
-private function saveFixture(string $provider, string $type, string $name, \Geocoder\Collection $collection): string
-{
-    $dir = "{$this->fixturesPath}/{$provider}";
-
-    if (! is_dir($dir)) {
-        mkdir($dir, 0755, true);
+    public function __construct()
+    {
+        $this->fixturesPath = __DIR__.'/../tests/__fixtures__/providers';
+        config(['simple-address.provider' => 'nominatim']);
+        $this->geocoding = new GeocodingService;
     }
 
-    $filename = "{$type}_{$name}.json";
-    $filepath = "{$dir}/{$filename}";
+    public function run(): int
+    {
+        echo "=== Generating Nominatim Fixtures ===\n";
+        echo "Search query: {$this->searchQuery}\n";
+        echo "Reverse coords: {$this->reverseLat}, {$this->reverseLon}\n";
 
-    // Convert Geocoder Collection to array of addresses
-    $data = $collection->map(fn ($address) => [
-        'display_name' => $address->getDisplayName(),
-        'latitude' => $address->getCoordinates()->getLatitude(),
-        'longitude' => $address->getCoordinates()->getLongitude(),
-        'street_name' => $address->getStreetName(),
-        'postal_code' => $address->getPostalCode(),
-        'city' => $address->getCity(),
-        'county' => $address->getCounty(),
-        'country_name' => $address->getCountryName(),
-    ])->toArray();
+        $success = 0;
+        $errors = 0;
 
-    $prettyJson = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    file_put_contents($filepath, $prettyJson."\n");
+        // Search fixture
+        try {
+            $this->generateSearchFixture();
+            $success++;
+        } catch (Exception $e) {
+            echo "   ✗ search: {$e->getMessage()}\n";
+            $errors++;
+        }
 
-    return $filename;
+        // Reverse fixture
+        try {
+            $this->generateReverseFixture();
+            $success++;
+        } catch (Exception $e) {
+            echo "   ✗ reverse: {$e->getMessage()}\n";
+            $errors++;
+        }
+
+        echo "\n=== Summary ===\n";
+        echo "✓ {$success} fixtures generated\n";
+
+        if ($errors > 0) {
+            echo "✗ {$errors} errors\n";
+
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private function generateSearchFixture(): void
+    {
+        $result = $this->geocoding->search($this->searchQuery, ['countries' => []]);
+        $filename = $this->saveFixture('nominatim', 'search', 'berlin_germany', $result);
+
+        echo "   ✓ {$filename}\n";
+    }
+
+    private function generateReverseFixture(): void
+    {
+        $result = $this->geocoding->reverse($this->reverseLat, $this->reverseLon, []);
+        $filename = $this->saveFixture('nominatim', 'reverse', 'berlin', $result);
+
+        echo "   ✓ {$filename}\n";
+    }
+
+    private function saveFixture(string $provider, string $type, string $name, \Geocoder\Collection $collection): string
+    {
+        $dir = "{$this->fixturesPath}/{$provider}";
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        $filename = "{$type}_{$name}.json";
+        $filepath = "{$dir}/{$filename}";
+
+        // Convert Geocoder Collection to array of addresses
+        $data = $collection->map(fn ($address) => [
+            'display_name' => $address->getDisplayName(),
+            'latitude' => $address->getCoordinates()->getLatitude(),
+            'longitude' => $address->getCoordinates()->getLongitude(),
+            'street_name' => $address->getStreetName(),
+            'postal_code' => $address->getPostalCode(),
+            'city' => $address->getCity(),
+            'county' => $address->getCounty(),
+            'country_name' => $address->getCountryName(),
+        ])->toArray();
+
+        $prettyJson = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        file_put_contents($filepath, $prettyJson."\n");
+
+        return $filename;
+    }
 }
+
+$generator = new FixtureGenerator;
+exit($generator->run());
 ```
 
 **Step 2: Run fixture generation**
 
-Run: `php scripts/generate-fixtures.php nominatim`
+Run: `php scripts/generate-fixtures.php`
 
-Expected: Generates fixture files without errors
+Expected: Generates nominatim fixtures without errors
 
 **Step 3: Commit**
 
 ```bash
 git add scripts/generate-fixtures.php
-git commit -m "refactor: update fixture generator to use new GeocodingService"
+git commit -m "refactor: simplify fixture generator for Nominatim only"
 ```
 
 ---
@@ -758,7 +800,7 @@ git commit -m "refactor: update fixture generator to use new GeocodingService"
 
 - Modify: `config/simple-address.php`
 
-**Step 1: Add global provider config**
+**Step 1: Add global provider config with optional providers**
 
 Update `config/simple-address.php`:
 
@@ -772,7 +814,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | The geocoding provider to use globally across the addon.
-    | Supported: 'nominatim', 'geoapify', 'google'
+    | Default: 'nominatim' (no API key required)
+    |
+    | To use other providers, first install them via Composer:
+    | - composer require geocoder-php/google-maps-provider
+    | - composer require geocoder-php/mapbox-provider
+    |
+    | Then set SIMPLE_ADDRESS_PROVIDER env var and configure API keys below.
     |
     */
     'provider' => env('SIMPLE_ADDRESS_PROVIDER', 'nominatim'),
@@ -785,13 +833,19 @@ return [
     | API keys for providers that require authentication.
     | Nominatim does not require a key.
     |
+    | To use Google Maps or MapBox, install the provider package and set the
+    | corresponding API key environment variable:
+    |
+    | GOOGLE_MAPS_API_KEY
+    | MAPBOX_API_KEY
+    |
     */
     'providers' => [
-        'geoapify' => [
-            'api_key' => env('GEOAPIFY_API_KEY'),
-        ],
         'google' => [
-            'api_key' => env('GOOGLE_GEOCODE_API_KEY'),
+            'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        ],
+        'mapbox' => [
+            'api_key' => env('MAPBOX_API_KEY'),
         ],
     ],
 ];
@@ -799,7 +853,8 @@ return [
 
 **Step 2: Verify config loads**
 
-Run: `php -r "require 'config/simple-address.php'; echo 'Config loads successfully'"`
+Run:
+`php -r "require 'config/simple-address.php'; echo 'Config loads successfully'"`
 
 Expected: "Config loads successfully"
 
@@ -807,7 +862,7 @@ Expected: "Config loads successfully"
 
 ```bash
 git add config/simple-address.php
-git commit -m "refactor: update config for single global provider"
+git commit -m "refactor: update config for Nominatim default with optional provider switching"
 ```
 
 ---
@@ -828,15 +883,16 @@ Expected: Some tests may fail due to changes
 
 Review test output and fix tests that:
 
-- Still reference old provider parameter
+- Still reference old provider parameter or old provider names
 - Test old transformation logic
 - Reference old exception names
 
 Likely fixes:
 
-- Update controller tests to not send provider parameter
+- Update any controller tests to not send provider parameter
 - Update service tests to expect Geocoder Collection
-- Update any transformer tests (may be removed entirely)
+- Remove any tests for Geoapify/Geocodify/Mapbox since they're unsupported
+- Update transformer tests if they exist (may be removed entirely)
 
 **Step 3: Run tests again**
 
@@ -848,7 +904,7 @@ Expected: All tests pass
 
 ```bash
 git add tests/
-git commit -m "test: update tests for simplified geocoding service"
+git commit -m "test: update tests for simplified Nominatim-only geocoding service"
 ```
 
 ---
@@ -894,15 +950,15 @@ git commit -m "style: apply linting and formatting fixes"
 
 **Step 1: Test search endpoint manually**
 
-Run: `curl -X POST http://localhost:8000/cp/simple-address/search -H "Content-Type: application/json" -d
-'{"query":"Berlin","countries":["de"]}'`
+Run:
+`curl -X POST http://localhost:8000/cp/simple-address/search -H "Content-Type: application/json" -d '{"query":"Berlin","countries":["de"]}'`
 
 Expected: JSON response with address results
 
 **Step 2: Test reverse endpoint manually**
 
-Run: `curl -X POST http://localhost:8000/cp/simple-address/reverse -H "Content-Type: application/json" -d
-'{"lat":52.52,"lon":13.405}'`
+Run:
+`curl -X POST http://localhost:8000/cp/simple-address/reverse -H "Content-Type: application/json" -d '{"lat":52.52,"lon":13.405}'`
 
 Expected: JSON response with address results
 
@@ -910,11 +966,11 @@ Expected: JSON response with address results
 
 Run: `php scripts/generate-fixtures.php`
 
-Expected: All fixtures generated without errors
+Expected: Nominatim fixtures generated without errors
 
-**Step 4: Commit**
+**Step 4: No commit needed**
 
-This is a verification step, no code changes to commit if everything works.
+This is a verification step only.
 
 ---
 
@@ -922,12 +978,12 @@ This is a verification step, no code changes to commit if everything works.
 
 All tasks complete when:
 
-- ✓ Geocoder library installed
+- ✓ Nominatim provider installed via Composer
 - ✓ GeocodingService refactored to wrap Geocoder
 - ✓ Controller simplified (validation + filtering, no provider param)
 - ✓ Fieldtype simplified (no provider selector)
-- ✓ Fixture generator updated
-- ✓ Config updated for global provider
+- ✓ Fixture generator simplified (Nominatim only)
+- ✓ Config updated for global provider with optional switching
 - ✓ All tests passing
 - ✓ Code quality checks passing
 - ✓ Integration verified
