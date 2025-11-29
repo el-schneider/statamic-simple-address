@@ -2,7 +2,6 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Fieldtypes;
 
-use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Statamic\Fields\Fieldtype;
 
 class SimpleAddress extends Fieldtype
@@ -11,24 +10,11 @@ class SimpleAddress extends Fieldtype
 
     protected function configFieldItems(): array
     {
-        $geocodingService = app(GeocodingService::class);
-
         return [
             'placeholder' => [
                 'type' => 'text',
                 'display' => __('Placeholder'),
                 'default' => __('Start typing …'),
-            ],
-            'provider' => [
-                'type' => 'select',
-                'display' => __('Provider'),
-                'instructions' => __('Choose the geocoding provider. Defaults to the app-wide setting if not specified.'),
-                'options' => array_combine(
-                    $geocodingService->getAvailableProviders(),
-                    $geocodingService->getAvailableProviders()
-                ),
-                'width' => 50,
-                'default' => config('simple-address.default_provider', 'nominatim'),
             ],
             'countries' => [
                 'type' => 'taggable',
@@ -73,14 +59,7 @@ class SimpleAddress extends Fieldtype
      */
     public function preload(): array
     {
-        $geocodingService = app(GeocodingService::class);
-        $providerName = $this->getActiveProvider();
-        $provider = $geocodingService->resolveProvider($providerName);
-
-        return [
-            'provider' => $providerName,
-            'provider_min_debounce_delay' => $provider->getMinDebounceDelay(),
-        ];
+        return [];
     }
 
     /**

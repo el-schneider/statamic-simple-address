@@ -2,279 +2,80 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
-use ElSchneider\StatamicSimpleAddress\Data\SearchResponse;
-use ElSchneider\StatamicSimpleAddress\Exceptions\ProviderApiException;
-use ElSchneider\StatamicSimpleAddress\Providers\AbstractProvider;
-use ElSchneider\StatamicSimpleAddress\Providers\ProviderRegistry;
-use Illuminate\Support\Facades\Cache;
+use ElSchneider\StatamicSimpleAddress\Data\AddressResult;
+use Geocoder\Provider\Nominatim\Nominatim;
+use Geocoder\Query\GeocodeQuery;
+use Geocoder\Query\ReverseQuery;
+use Geocoder\StatefulGeocoder;
+use GuzzleHttp\Client;
 
 class GeocodingService
 {
-    /**
-     * Search for an address and return the raw API response.
-     *
-     * @param  array{countries?: string[], language?: string}  $options
-     * @return array{response: array, provider: AbstractProvider}
-     */
-    public function searchRaw(string $providerName, string $query, array $options = []): array
-    {
-        $provider = $this->resolveProvider($providerName);
-        $request = $provider->buildSearchRequest($query, $options);
-        $response = $this->fetch($request['url'], $request['params']);
+    private StatefulGeocoder $geocoder;
 
-        return ['response' => $response, 'provider' => $provider];
+    public function __construct()
+    {
+        $httpClient = new Client;
+        $userAgent = config('app.name', 'Statamic Simple Address');
+        $provider = Nominatim::withOpenStreetMapServer($httpClient, $userAgent);
+
+        $this->geocoder = new StatefulGeocoder($provider, 'en');
     }
 
-    /**
-     * Search for an address and return transformed results.
-     *
-     * @param  array{countries?: string[], language?: string}  $options
-     */
-    public function search(string $providerName, string $query, array $options = []): SearchResponse
+    public function geocode(GeocodeQuery $query): array
     {
-        $result = $this->searchRaw($providerName, $query, $options);
+        $results = $this->geocoder->geocodeQuery($query);
 
-        return $result['provider']->transformResponse($result['response']);
+        return array_map(
+            fn ($address) => new AddressResult(
+                label: $this->formatAddressLabel($address),
+                lat: (string) $address->getCoordinates()->getLatitude(),
+                lon: (string) $address->getCoordinates()->getLongitude(),
+                data: array_filter($address->toArray(), fn ($v) => $v !== null && $v !== ''),
+            ),
+            $results->all()
+        );
     }
 
-    /**
-     * Reverse geocode coordinates and return the raw API response.
-     *
-     * @param  array{language?: string}  $options
-     * @return array{response: array, provider: AbstractProvider}
-     */
-    public function reverseRaw(string $providerName, float $lat, float $lon, array $options = []): array
+    public function reverse(ReverseQuery $query): array
     {
-        $provider = $this->resolveProvider($providerName);
-        $request = $provider->buildReverseRequest($lat, $lon, $options);
-        $response = $this->fetch($request['url'], $request['params']);
+        $results = $this->geocoder->reverseQuery($query);
 
-        return ['response' => $response, 'provider' => $provider];
+        return array_map(
+            fn ($address) => new AddressResult(
+                label: $this->formatAddressLabel($address),
+                lat: (string) $address->getCoordinates()->getLatitude(),
+                lon: (string) $address->getCoordinates()->getLongitude(),
+                data: array_filter($address->toArray(), fn ($v) => $v !== null && $v !== ''),
+            ),
+            $results->all()
+        );
     }
 
-    /**
-     * Reverse geocode coordinates and return transformed results.
-     *
-     * @param  array{language?: string}  $options
-     */
-    public function reverse(string $providerName, float $lat, float $lon, array $options = []): SearchResponse
+    private function formatAddressLabel($location): string
     {
-        $result = $this->reverseRaw($providerName, $lat, $lon, $options);
+        $parts = [];
 
-        return $result['provider']->transformReverseResponse($result['response']);
-    }
-
-    /**
-     * Resolve and instantiate a provider by name.
-     */
-    public function resolveProvider(string $name): AbstractProvider
-    {
-        $config = $this->getConfig("simple-address.providers.{$name}", []);
-
-        // Check for custom class in config
-        if (isset($config['class'])) {
-            $class = $config['class'];
-            if (! class_exists($class)) {
-                throw new \InvalidArgumentException("Provider class '{$class}' not found");
-            }
-            if (! is_subclass_of($class, AbstractProvider::class)) {
-                throw new \InvalidArgumentException('Provider class must extend AbstractProvider');
-            }
-
-            return new $class($config);
+        if ($location->getStreetNumber()) {
+            $parts[] = $location->getStreetNumber();
         }
 
-        // Use built-in provider from registry
-        if (ProviderRegistry::has($name)) {
-            return ProviderRegistry::make($name, $config);
+        if ($location->getStreetName()) {
+            $parts[] = $location->getStreetName();
         }
 
-        throw new \InvalidArgumentException("Provider '{$name}' not found");
-    }
-
-    /**
-     * Get list of available provider names.
-     *
-     * @return string[]
-     */
-    public function getAvailableProviders(): array
-    {
-        $configured = array_keys($this->getConfig('simple-address.providers', []));
-        $builtIn = ProviderRegistry::names();
-
-        return array_unique(array_merge($configured, $builtIn));
-    }
-
-    /**
-     * Get config value (works with or without Laravel).
-     */
-    private function getConfig(string $key, mixed $default = null): mixed
-    {
-        if (function_exists('config')) {
-            try {
-                return config($key, $default);
-            } catch (\Throwable) {
-                // Fall through if Laravel isn't booted
-            }
+        if ($location->getLocality()) {
+            $parts[] = $location->getLocality();
         }
 
-        return $default;
-    }
-
-    /**
-     * Validate API key is configured if required by provider.
-     */
-    public function validateApiKey(AbstractProvider $provider, string $name): void
-    {
-        if ($provider->requiresApiKey() && empty($provider->getApiKey())) {
-            throw new \InvalidArgumentException(
-                "Please configure the API key for {$name} in your environment variables."
-            );
-        }
-    }
-
-    /**
-     * Generate cache key from data.
-     */
-    public function generateCacheKey(string $prefix, array $data): string
-    {
-        return $prefix.':'.hash('sha256', json_encode($data));
-    }
-
-    /**
-     * Get cached response or execute fetcher.
-     *
-     * @return array{data: mixed, cached: bool}
-     */
-    public function getCachedOrFetch(string $cacheKey, callable $fetcher): array
-    {
-        if (Cache::has($cacheKey)) {
-            return ['data' => Cache::get($cacheKey), 'cached' => true];
+        if ($location->getAdminLevels()->first()?->getName()) {
+            $parts[] = $location->getAdminLevels()->first()->getName();
         }
 
-        $data = $fetcher();
-
-        // Cache deferred to avoid blocking
-        \Illuminate\Support\defer(fn () => Cache::put($cacheKey, $data, now()->addYear()));
-
-        return ['data' => $data, 'cached' => false];
-    }
-
-    /**
-     * Enforce minimum debounce delay for a provider to prevent exceeding rate limits.
-     * Uses atomic locking to check if enough time has passed since the last request.
-     *
-     * @return bool True if this request should proceed, false if too soon
-     */
-    public function enforceMinimumDelay(string $provider, int $minDelayMs): bool
-    {
-        if ($minDelayMs <= 0) {
-            return true;
+        if ($location->getCountry()?->getName()) {
+            $parts[] = $location->getCountry()->getName();
         }
 
-        $lockKey = "simple_address:throttle:{$provider}";
-        $timeKey = "{$lockKey}:time";
-
-        $lock = Cache::lock($lockKey, 5);
-        if (! $lock->get()) {
-            return false;
-        }
-
-        try {
-            $lastRequestTime = Cache::get($timeKey);
-
-            if ($lastRequestTime) {
-                $elapsed = now()->diffInMilliseconds($lastRequestTime);
-                if ($elapsed < $minDelayMs) {
-                    return false;
-                }
-            }
-
-            Cache::put($timeKey, now(), 60);
-
-            return true;
-        } finally {
-            $lock->release();
-        }
-    }
-
-    /**
-     * Build the full URL with query parameters.
-     */
-    public function buildUrl(string $url, array $params): string
-    {
-        if (empty($params)) {
-            return $url;
-        }
-
-        return $url.'?'.http_build_query($params);
-    }
-
-    /**
-     * Fetch data from a URL (works with or without Laravel).
-     *
-     * @throws ProviderApiException
-     */
-    public function fetch(string $url, array $params = []): array
-    {
-        $fullUrl = $this->buildUrl($url, $params);
-
-        // Try Laravel's HTTP client if available
-        if (class_exists(\Illuminate\Support\Facades\Http::class) && function_exists('app')) {
-            try {
-                return $this->fetchWithLaravel($url, $params);
-            } catch (\Throwable) {
-                // Fall through to native PHP if Laravel isn't booted
-            }
-        }
-
-        return $this->fetchNative($fullUrl);
-    }
-
-    /**
-     * Fetch using Laravel's HTTP client.
-     *
-     * @throws ProviderApiException
-     */
-    private function fetchWithLaravel(string $url, array $params): array
-    {
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
-            'User-Agent' => config('app.name', 'Statamic Simple Address'),
-        ])->get($url, $params);
-
-        if (! $response->successful()) {
-            throw new ProviderApiException('Provider API request failed', $response->status());
-        }
-
-        return $response->json();
-    }
-
-    /**
-     * Fetch using native PHP (for CLI scripts without Laravel).
-     *
-     * @throws ProviderApiException
-     */
-    private function fetchNative(string $url): array
-    {
-        $context = stream_context_create([
-            'http' => [
-                'header' => 'User-Agent: StatamicSimpleAddress',
-                'timeout' => 30,
-            ],
-        ]);
-
-        $response = @file_get_contents($url, false, $context);
-
-        if ($response === false) {
-            throw new ProviderApiException('Failed to fetch from API', 0);
-        }
-
-        $data = json_decode($response, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new ProviderApiException('Invalid JSON response from API', 0);
-        }
-
-        return $data;
+        return implode(', ', $parts);
     }
 }
