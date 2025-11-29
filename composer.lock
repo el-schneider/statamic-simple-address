@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "af524b15a6f64ef1c7b8af5dc5d690d1",
+    "content-hash": "4c9b810ef177ebffbd575e0ec9788993",
     "packages": [
         {
             "name": "ajthinking/archetype",
@@ -784,6 +784,62 @@
                 }
             ],
             "time": "2023-10-12T05:21:21+00:00"
+        },
+        {
+            "name": "geocoder-php/cache-provider",
+            "version": "4.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/geocoder-php/cache-provider.git",
+                "reference": "3b091778426722cf96e166d187bbdd28660635b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/geocoder-php/cache-provider/zipball/3b091778426722cf96e166d187bbdd28660635b8",
+                "reference": "3b091778426722cf96e166d187bbdd28660635b8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.0",
+                "psr/simple-cache": "^1.0|^2.0|^3.0",
+                "willdurand/geocoder": "^4.0|^5.0"
+            },
+            "provide": {
+                "geocoder-php/provider-implementation": "1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Geocoder\\Provider\\Cache\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com"
+                }
+            ],
+            "description": "Cache the result of a provider",
+            "homepage": "http://geocoder-php.org/Geocoder/",
+            "support": {
+                "source": "https://github.com/geocoder-php/cache-provider/tree/4.5.0"
+            },
+            "time": "2025-04-15T13:24:32+00:00"
         },
         {
             "name": "geocoder-php/chain-provider",
