@@ -20,5 +20,17 @@ return [
                 config('app.name', 'Statamic Simple Address'),
             ],
         ],
+        // 'mapbox' => [
+        //     'class' => \Geocoder\Provider\Mapbox\Mapbox::class,
+        //     'args' => [
+        //         env('MAPBOX_ACCESS_TOKEN'),
+        //     ],
+        // ],
+        // 'google' => [
+        //     'class' => \Geocoder\Provider\GoogleMaps\GoogleMaps::class,
+        //     'args' => [
+        //         'apiKey' => env('GOOGLE_GEOCODE_API_KEY'),
+        //     ],
+        // ],
     ],
 ];
