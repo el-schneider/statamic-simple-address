@@ -65,6 +65,29 @@ php artisan vendor:publish --tag=simple-address-config
 
 Edit `config/simple-address.php` to add providers or adjust cache settings.
 
+#### Example Configurations
+
+The published config file includes example configurations for popular providers (Mapbox, Google Maps) commented out. To use them:
+
+1. **Uncomment** the provider configuration in `config/simple-address.php`
+2. **Install** the corresponding Geocoder provider package
+3. **Set** the required API key via environment variables
+
+For example, to use Google Maps:
+
+```bash
+# 1. Install the provider
+composer require geocoder-php/google-maps-provider
+
+# 2. Uncomment 'google' in config/simple-address.php
+
+# 3. Set your API key
+GOOGLE_GEOCODE_API_KEY=your-api-key
+SIMPLE_ADDRESS_PROVIDER=google
+```
+
+See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available providers, their constructor arguments, and setup requirements.
+
 ### Adding a New Provider
 
 1. Install the provider package:
