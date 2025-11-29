@@ -1,0 +1,243 @@
+{
+  "type": "FeatureCollection",
+  "query": ["berlin", "germany"],
+  "features": [
+    {
+      "id": "place.115770",
+      "type": "Feature",
+      "place_type": ["region", "place"],
+      "relevance": 1,
+      "properties": {
+        "mapbox_id": "dXJuOm1ieHBsYzpBY1E2",
+        "wikidata": "Q64",
+        "short_code": "DE-BE"
+      },
+      "text": "Berlin",
+      "place_name": "Berlin, Germany",
+      "bbox": [13.08836, 52.338261, 13.760906, 52.675502],
+      "center": [13.38886, 52.517037],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [13.38886, 52.517037]
+      },
+      "context": [
+        {
+          "id": "country.8762",
+          "mapbox_id": "dXJuOm1ieHBsYzpJam8",
+          "wikidata": "Q183",
+          "short_code": "de",
+          "text": "Germany"
+        }
+      ]
+    },
+    {
+      "id": "locality.25913914",
+      "type": "Feature",
+      "place_type": ["locality"],
+      "relevance": 1,
+      "properties": {
+        "mapbox_id": "dXJuOm1ieHBsYzpBWXRxT2c",
+        "wikidata": "Q12053136"
+      },
+      "text": "Berlin",
+      "place_name": "Berlin, Seedorf, Schleswig-Holstein, Germany",
+      "bbox": [10.421263, 54.021842, 10.473796, 54.055833],
+      "center": [10.44758, 54.036045],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.44758, 54.036045]
+      },
+      "context": [
+        {
+          "id": "place.72648762",
+          "mapbox_id": "dXJuOm1ieHBsYzpCRlNJT2c",
+          "wikidata": "Q684291",
+          "text": "Seedorf"
+        },
+        {
+          "id": "district.1943098",
+          "mapbox_id": "dXJuOm1ieHBsYzpIYVk2",
+          "wikidata": "Q2980",
+          "text": "Kreis Segeberg"
+        },
+        {
+          "id": "region.17466",
+          "mapbox_id": "dXJuOm1ieHBsYzpSRG8",
+          "wikidata": "Q1194",
+          "short_code": "DE-SH",
+          "text": "Schleswig-Holstein"
+        },
+        {
+          "id": "country.8762",
+          "mapbox_id": "dXJuOm1ieHBsYzpJam8",
+          "wikidata": "Q183",
+          "short_code": "de",
+          "text": "Germany"
+        }
+      ]
+    },
+    {
+      "id": "address.2580106772249974",
+      "type": "Feature",
+      "place_type": ["address"],
+      "relevance": 1,
+      "properties": {
+        "accuracy": "street",
+        "mapbox_id": "dXJuOm1ieGFkci1zdHI6Y2EyZjMxNmMtZjBhMy00ZmYwLWEwODgtZDYxMzg4ZmUwNTVh"
+      },
+      "text": "Berlin",
+      "place_name": "Berlin, 24848 Klein Bennebek, Germany",
+      "center": [9.422626, 54.404249],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [9.422626, 54.404249]
+      },
+      "context": [
+        {
+          "id": "postcode.13266490",
+          "mapbox_id": "dXJuOm1ieHBsYzp5bTQ2",
+          "text": "24848"
+        },
+        {
+          "id": "place.40798266",
+          "mapbox_id": "dXJuOm1ieHBsYzpBbTZJT2c",
+          "wikidata": "Q556639",
+          "text": "Klein Bennebek"
+        },
+        {
+          "id": "district.1885754",
+          "mapbox_id": "dXJuOm1ieHBsYzpITVk2",
+          "wikidata": "Q2941",
+          "text": "Kreis Schleswig-Flensburg"
+        },
+        {
+          "id": "region.17466",
+          "mapbox_id": "dXJuOm1ieHBsYzpSRG8",
+          "wikidata": "Q1194",
+          "short_code": "DE-SH",
+          "text": "Schleswig-Holstein"
+        },
+        {
+          "id": "country.8762",
+          "mapbox_id": "dXJuOm1ieHBsYzpJam8",
+          "wikidata": "Q183",
+          "short_code": "de",
+          "text": "Germany"
+        }
+      ]
+    },
+    {
+      "id": "address.8816817805898082",
+      "type": "Feature",
+      "place_type": ["address"],
+      "relevance": 0.958333,
+      "properties": {
+        "accuracy": "street",
+        "mapbox_id": "dXJuOm1ieGFkci1zdHI6ZTY0MTBlYTgtNzBhZS00MmViLTk0ZWItNThlM2U4YmUzNDcz"
+      },
+      "text": "Barlin",
+      "place_name": "Barlin, 17159 Dargun, Germany",
+      "center": [12.883232, 53.922631],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.883232, 53.922631]
+      },
+      "context": [
+        {
+          "id": "postcode.8072762",
+          "mapbox_id": "dXJuOm1ieHBsYzpleTQ2",
+          "text": "17159"
+        },
+        {
+          "id": "locality.19302970",
+          "mapbox_id": "dXJuOm1ieHBsYzpBU2FLT2c",
+          "text": "Barlin"
+        },
+        {
+          "id": "place.14256186",
+          "mapbox_id": "dXJuOm1ieHBsYzoyWWc2",
+          "wikidata": "Q50959",
+          "text": "Dargun"
+        },
+        {
+          "id": "district.1214010",
+          "mapbox_id": "dXJuOm1ieHBsYzpFb1k2",
+          "wikidata": "Q2902",
+          "text": "Kreis Mecklenburgische Seenplatte"
+        },
+        {
+          "id": "region.25658",
+          "mapbox_id": "dXJuOm1ieHBsYzpaRG8",
+          "wikidata": "Q1196",
+          "short_code": "DE-MV",
+          "text": "Mecklenburg-Western Pomerania"
+        },
+        {
+          "id": "country.8762",
+          "mapbox_id": "dXJuOm1ieHBsYzpJam8",
+          "wikidata": "Q183",
+          "short_code": "de",
+          "text": "Germany"
+        }
+      ]
+    },
+    {
+      "id": "address.8472075609786054",
+      "type": "Feature",
+      "place_type": ["address"],
+      "relevance": 0.958333,
+      "properties": {
+        "accuracy": "street",
+        "mapbox_id": "dXJuOm1ieGFkci1zdHI6YTA3MGJjZjYtY2M4NC00NzI3LTgzZDUtNWUxNDA3ODQ4MGQz"
+      },
+      "text": "Ferliner Straße",
+      "place_name": "Ferliner Straße, 84332 Hebertsfelden, Germany",
+      "matching_text": "Ferlin",
+      "matching_place_name": "Ferlin, 84332 Hebertsfelden, Germany",
+      "center": [12.826207, 48.421007],
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.826207, 48.421007]
+      },
+      "context": [
+        {
+          "id": "postcode.51138106",
+          "mapbox_id": "dXJuOm1ieHBsYzpBd3hPT2c",
+          "text": "84332"
+        },
+        {
+          "id": "locality.69249594",
+          "mapbox_id": "dXJuOm1ieHBsYzpCQ0NxT2c",
+          "text": "Edhof"
+        },
+        {
+          "id": "place.31664186",
+          "mapbox_id": "dXJuOm1ieHBsYzpBZU1vT2c",
+          "wikidata": "Q553780",
+          "text": "Hebertsfelden"
+        },
+        {
+          "id": "district.1795642",
+          "mapbox_id": "dXJuOm1ieHBsYzpHMlk2",
+          "wikidata": "Q10477",
+          "text": "Kreis Rottal-Inn"
+        },
+        {
+          "id": "region.123962",
+          "mapbox_id": "dXJuOm1ieHBsYzpBZVE2",
+          "wikidata": "Q980",
+          "short_code": "DE-BY",
+          "text": "Bavaria"
+        },
+        {
+          "id": "country.8762",
+          "mapbox_id": "dXJuOm1ieHBsYzpJam8",
+          "wikidata": "Q183",
+          "short_code": "de",
+          "text": "Germany"
+        }
+      ]
+    }
+  ],
+  "attribution": "NOTICE: © 2025 Mapbox and its suppliers. All rights reserved. Use of this data is subject to the Mapbox Terms of Service (https://www.mapbox.com/about/maps/). This response and the information it contains may not be retained."
+}

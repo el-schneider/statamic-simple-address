@@ -2,7 +2,7 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Fieldtypes;
 
-use ElSchneider\StatamicSimpleAddress\Services\ProviderApiService;
+use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Statamic\Fields\Fieldtype;
 
 class SimpleAddress extends Fieldtype
@@ -11,7 +11,7 @@ class SimpleAddress extends Fieldtype
 
     protected function configFieldItems(): array
     {
-        $providerService = app(ProviderApiService::class);
+        $geocodingService = app(GeocodingService::class);
 
         return [
             'placeholder' => [
@@ -24,8 +24,8 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Provider'),
                 'instructions' => __('Choose the geocoding provider. Defaults to the app-wide setting if not specified.'),
                 'options' => array_combine(
-                    $providerService->getAvailableProviders(),
-                    $providerService->getAvailableProviders()
+                    $geocodingService->getAvailableProviders(),
+                    $geocodingService->getAvailableProviders()
                 ),
                 'width' => 50,
                 'default' => config('simple-address.default_provider', 'nominatim'),
@@ -73,9 +73,9 @@ class SimpleAddress extends Fieldtype
      */
     public function preload(): array
     {
-        $providerService = app(ProviderApiService::class);
+        $geocodingService = app(GeocodingService::class);
         $providerName = $this->getActiveProvider();
-        $provider = $providerService->resolveProvider($providerName);
+        $provider = $geocodingService->resolveProvider($providerName);
 
         return [
             'provider' => $providerName,

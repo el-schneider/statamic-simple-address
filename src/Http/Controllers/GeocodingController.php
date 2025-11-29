@@ -5,19 +5,16 @@ namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 use Closure;
 use ElSchneider\StatamicSimpleAddress\Exceptions\ProviderApiException;
 use ElSchneider\StatamicSimpleAddress\Providers\AbstractProvider;
-use ElSchneider\StatamicSimpleAddress\Services\ProviderApiService;
-use ElSchneider\StatamicSimpleAddress\Services\ThrottleService;
+use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class GeocodingController
 {
     public function __construct(
-        private ProviderApiService $providerService,
-        private ThrottleService $throttleService
+        private GeocodingService $geocodingService,
     ) {}
 
     public function search(Request $request): JsonResponse
@@ -25,7 +22,7 @@ class GeocodingController
         return $this->handleRequest($request, [
             'rules' => [
                 'query' => 'required|string|min:1|max:255',
-                'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
+                'provider' => 'required|string|in:'.implode(',', $this->geocodingService->getAvailableProviders()),
                 'countries' => 'array',
                 'countries.*' => 'string',
                 'language' => 'string|nullable',
@@ -53,7 +50,7 @@ class GeocodingController
             'rules' => [
                 'lat' => 'required|numeric|between:-90,90',
                 'lon' => 'required|numeric|between:-180,180',
-                'provider' => 'required|string|in:'.implode(',', $this->providerService->getAvailableProviders()),
+                'provider' => 'required|string|in:'.implode(',', $this->geocodingService->getAvailableProviders()),
                 'language' => 'string|nullable',
             ],
             'cachePrefix' => 'address-reverse',
@@ -99,38 +96,33 @@ class GeocodingController
 
         try {
             $providerName = $validated['provider'];
-            $provider = $this->providerService->resolveProvider($providerName);
-            $this->providerService->validateApiKey($provider, $providerName);
+            $provider = $this->geocodingService->resolveProvider($providerName);
+            $this->geocodingService->validateApiKey($provider, $providerName);
 
-            $cacheKey = $this->providerService->generateCacheKey(
+            $cacheKey = $this->geocodingService->generateCacheKey(
                 $config['cachePrefix'],
                 $config['cacheKeyBuilder']($validated)
             );
 
-            $cached = $this->providerService->getCachedOrFetch($cacheKey, function () use ($provider, $validated, $providerName, $config) {
-                if (! $this->throttleService->enforceMinimumDelay($providerName, $provider->getMinDebounceDelay())) {
+            $cached = $this->geocodingService->getCachedOrFetch($cacheKey, function () use ($provider, $validated, $providerName, $config) {
+                if (! $this->geocodingService->enforceMinimumDelay($providerName, $provider->getMinDebounceDelay())) {
                     return null;
                 }
 
                 $apiRequest = $config['requestBuilder']($provider, $validated);
 
-                $response = Http::withHeaders([
-                    'User-Agent' => config('app.name', 'Statamic Simple Address'),
-                ])->get($apiRequest['url'], $apiRequest['params']);
-
-                if (! $response->successful()) {
+                try {
+                    return $this->geocodingService->fetch($apiRequest['url'], $apiRequest['params']);
+                } catch (ProviderApiException $e) {
                     Log::warning("simple-address: {$config['logMessage']} API request failed", [
                         'provider' => $providerName,
                         ...$config['logContext']($validated),
-                        'status' => $response->status(),
+                        'status' => $e->getStatusCode(),
                         'url' => $apiRequest['url'],
-                        'response_body' => $response->body(),
                     ]);
 
-                    throw new ProviderApiException('Provider API request failed', $response->status());
+                    throw $e;
                 }
-
-                return $response->json();
             });
 
             if ($cached['data'] === null) {

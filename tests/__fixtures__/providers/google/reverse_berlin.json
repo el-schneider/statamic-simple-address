@@ -1,0 +1,719 @@
+{
+  "plus_code": {
+    "compound_code": "GC94+X2R Berlin, Germany",
+    "global_code": "9F4MGC94+X2R"
+  },
+  "results": [
+    {
+      "address_components": [
+        {
+          "long_name": "Spandauer Straße",
+          "short_name": "Spandauer Str.",
+          "types": ["route"]
+        },
+        {
+          "long_name": "Mitte",
+          "short_name": "Mitte",
+          "types": ["political", "sublocality", "sublocality_level_1"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        },
+        {
+          "long_name": "10178",
+          "short_name": "10178",
+          "types": ["postal_code"]
+        }
+      ],
+      "formatted_address": "Spandauer Str., 10178 Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5200306,
+            "lng": 13.405132
+          },
+          "southwest": {
+            "lat": 52.5199149,
+            "lng": 13.4049811
+          }
+        },
+        "location": {
+          "lat": 52.5199728,
+          "lng": 13.4050566
+        },
+        "location_type": "GEOMETRIC_CENTER",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5213217302915,
+            "lng": 13.4064055302915
+          },
+          "southwest": {
+            "lat": 52.5186237697085,
+            "lng": 13.4037075697085
+          }
+        }
+      },
+      "place_id": "ChIJCceCkt9RqEcR_MBWEdTYvXU",
+      "types": ["route"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "GC94+X2",
+          "short_name": "GC94+X2",
+          "types": ["plus_code"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "GC94+X2 Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.52,
+            "lng": 13.405125
+          },
+          "southwest": {
+            "lat": 52.519875,
+            "lng": 13.405
+          }
+        },
+        "location": {
+          "lat": 52.52,
+          "lng": 13.405
+        },
+        "location_type": "GEOMETRIC_CENTER",
+        "viewport": {
+          "northeast": {
+            "lat": 52.52128648029149,
+            "lng": 13.4064114802915
+          },
+          "southwest": {
+            "lat": 52.5185885197085,
+            "lng": 13.4037135197085
+          }
+        }
+      },
+      "place_id": "GhIJwvUoXI9CSkARj8L1KFzPKkA",
+      "plus_code": {
+        "compound_code": "GC94+X2 Berlin, Germany",
+        "global_code": "9F4MGC94+X2"
+      },
+      "types": ["plus_code"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "10178",
+          "short_name": "10178",
+          "types": ["postal_code"]
+        },
+        {
+          "long_name": "Mitte",
+          "short_name": "Mitte",
+          "types": ["political", "sublocality", "sublocality_level_1"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "10178 Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5285727,
+            "lng": 13.4296001
+          },
+          "southwest": {
+            "lat": 52.5120078,
+            "lng": 13.3940543
+          }
+        },
+        "location": {
+          "lat": 52.5221879,
+          "lng": 13.4093313
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5285727,
+            "lng": 13.4296001
+          },
+          "southwest": {
+            "lat": 52.5120078,
+            "lng": 13.3940543
+          }
+        }
+      },
+      "place_id": "ChIJ85n72yFOqEcRIM89lUkgIRw",
+      "types": ["postal_code"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Mitte",
+          "short_name": "Mitte",
+          "types": ["political", "sublocality", "sublocality_level_2"]
+        },
+        {
+          "long_name": "Mitte",
+          "short_name": "Mitte",
+          "types": ["political", "sublocality", "sublocality_level_1"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        },
+        {
+          "long_name": "10",
+          "short_name": "10",
+          "types": ["postal_code", "postal_code_prefix"]
+        }
+      ],
+      "formatted_address": "Mitte, 10 Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5403962,
+            "lng": 13.4293586
+          },
+          "southwest": {
+            "lat": 52.5041001,
+            "lng": 13.3658543
+          }
+        },
+        "location": {
+          "lat": 52.519444,
+          "lng": 13.4066669
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5403962,
+            "lng": 13.4293586
+          },
+          "southwest": {
+            "lat": 52.5041001,
+            "lng": 13.3658543
+          }
+        }
+      },
+      "place_id": "ChIJjw3Y6t9RqEcR8jUVWEcgISY",
+      "types": ["political", "sublocality", "sublocality_level_2"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Mitte",
+          "short_name": "Mitte",
+          "types": ["political", "sublocality", "sublocality_level_1"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Mitte, Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5676639,
+            "lng": 13.4293586
+          },
+          "southwest": {
+            "lat": 52.4987314,
+            "lng": 13.3015252
+          }
+        },
+        "location": {
+          "lat": 52.5372897,
+          "lng": 13.3602743
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5676639,
+            "lng": 13.4293586
+          },
+          "southwest": {
+            "lat": 52.4987314,
+            "lng": 13.3015252
+          }
+        }
+      },
+      "place_id": "ChIJAUK8it1RqEcRwKtfW0YgIQU",
+      "types": ["political", "sublocality", "sublocality_level_1"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Berliner Innenstadt",
+          "short_name": "Berliner Innenstadt",
+          "types": ["neighborhood", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Berliner Innenstadt, Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5498029,
+            "lng": 13.4758846
+          },
+          "southwest": {
+            "lat": 52.4647295,
+            "lng": 13.2819407
+          }
+        },
+        "location": {
+          "lat": 52.5183876,
+          "lng": 13.407194
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5498029,
+            "lng": 13.4758846
+          },
+          "southwest": {
+            "lat": 52.4647295,
+            "lng": 13.2819407
+          }
+        }
+      },
+      "place_id": "ChIJ9RNPtDJQqEcRcGsFkvAGLKI",
+      "types": ["neighborhood", "political"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "10",
+          "short_name": "10",
+          "types": ["postal_code", "postal_code_prefix"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "10 Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.5582308,
+            "lng": 13.5522518
+          },
+          "southwest": {
+            "lat": 52.4662421,
+            "lng": 13.2810833
+          }
+        },
+        "location": {
+          "lat": 52.50914909999999,
+          "lng": 13.4164386
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.5582308,
+            "lng": 13.5522518
+          },
+          "southwest": {
+            "lat": 52.4662421,
+            "lng": 13.2810833
+          }
+        }
+      },
+      "navigation_points": [
+        {
+          "location": {
+            "latitude": 52.5091343,
+            "longitude": 13.4164128
+          }
+        }
+      ],
+      "place_id": "ChIJfc8G9CdOqEcReuA-Kb2sISA",
+      "types": ["postal_code", "postal_code_prefix"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.6754542,
+            "lng": 13.7611175
+          },
+          "southwest": {
+            "lat": 52.338234,
+            "lng": 13.088346
+          }
+        },
+        "location": {
+          "lat": 52.52000659999999,
+          "lng": 13.404954
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.6754542,
+            "lng": 13.7611175
+          },
+          "southwest": {
+            "lat": 52.338234,
+            "lng": 13.088346
+          }
+        }
+      },
+      "place_id": "ChIJAVkDPzdOqEcRcDteW0YgIQQ",
+      "types": ["locality", "political"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.6754542,
+            "lng": 13.7611175
+          },
+          "southwest": {
+            "lat": 52.338234,
+            "lng": 13.088346
+          }
+        },
+        "location": {
+          "lat": 52.4938053,
+          "lng": 13.4552919
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.6754542,
+            "lng": 13.7611175
+          },
+          "southwest": {
+            "lat": 52.338234,
+            "lng": 13.088346
+          }
+        }
+      },
+      "place_id": "ChIJ8_KccStOqEcRhtFXjKWPuo0",
+      "types": ["administrative_area_level_1", "political"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Kreisfreie Stadt Berlin, Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.6753788,
+            "lng": 13.7604692
+          },
+          "southwest": {
+            "lat": 52.3382417,
+            "lng": 13.0883331
+          }
+        },
+        "location": {
+          "lat": 52.5199913,
+          "lng": 13.4050149
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.6753788,
+            "lng": 13.7604692
+          },
+          "southwest": {
+            "lat": 52.3382417,
+            "lng": 13.0883331
+          }
+        }
+      },
+      "place_id": "ChIJ3Sm6ODdOqEcRrjh8PzSkRXI",
+      "types": ["administrative_area_level_3", "political"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["administrative_area_level_4", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "Berlin",
+          "types": ["locality", "political"]
+        },
+        {
+          "long_name": "Kreisfreie Stadt Berlin",
+          "short_name": "Kreisfreie Stadt Berlin",
+          "types": ["administrative_area_level_3", "political"]
+        },
+        {
+          "long_name": "Berlin",
+          "short_name": "BE",
+          "types": ["administrative_area_level_1", "political"]
+        },
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Berlin, Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 52.6753788,
+            "lng": 13.7604692
+          },
+          "southwest": {
+            "lat": 52.3382417,
+            "lng": 13.0883331
+          }
+        },
+        "location": {
+          "lat": 52.4938053,
+          "lng": 13.4552919
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 52.6753788,
+            "lng": 13.7604692
+          },
+          "southwest": {
+            "lat": 52.3382417,
+            "lng": 13.0883331
+          }
+        }
+      },
+      "place_id": "ChIJ3Sm6ODdOqEcR5M7ma-of5No",
+      "types": ["administrative_area_level_4", "political"]
+    },
+    {
+      "address_components": [
+        {
+          "long_name": "Germany",
+          "short_name": "DE",
+          "types": ["country", "political"]
+        }
+      ],
+      "formatted_address": "Germany",
+      "geometry": {
+        "bounds": {
+          "northeast": {
+            "lat": 55.0815,
+            "lng": 15.0418962
+          },
+          "southwest": {
+            "lat": 47.270114,
+            "lng": 5.8663425
+          }
+        },
+        "location": {
+          "lat": 51.165691,
+          "lng": 10.451526
+        },
+        "location_type": "APPROXIMATE",
+        "viewport": {
+          "northeast": {
+            "lat": 55.0815,
+            "lng": 15.0418962
+          },
+          "southwest": {
+            "lat": 47.270114,
+            "lng": 5.8663425
+          }
+        }
+      },
+      "place_id": "ChIJa76xwh5ymkcRW-WRjmtd6HU",
+      "types": ["country", "political"]
+    }
+  ],
+  "status": "OK"
+}
