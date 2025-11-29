@@ -35,31 +35,75 @@ address:
 
 > **Note:** The default Nominatim setup is ideal for local development. The public Nominatim server has a strict 1 req/sec limit and forbids autocomplete on the client side. For production, most users switch to Geoapify, Google, or Mapbox – all offer free tiers, but usage limits and terms vary.
 
-## Using Different Providers
+## Configuration
 
-Publish the config to switch providers or add custom ones:
+### Basic Setup (Out of the Box)
+
+The addon ships with Nominatim as the default provider and caching enabled. No configuration needed—everything works immediately:
+
+```bash
+composer require el-schneider/statamic-simple-address
+```
+
+### Customizing Providers
+
+To switch to a different provider or customize settings, you can:
+
+#### Option 1: Environment Variables
+
+```bash
+SIMPLE_ADDRESS_PROVIDER=mapbox
+SIMPLE_ADDRESS_CACHE_DURATION=3600
+SIMPLE_ADDRESS_CACHE_ENABLED=false
+```
+
+#### Option 2: Publish Configuration
 
 ```bash
 php artisan vendor:publish --tag=simple-address-config
 ```
 
-Add your API key to `.env`:
+Edit `config/simple-address.php` to add providers or adjust cache settings.
 
-| Provider  | Env Variable             | Notes                                   |
-| --------- | ------------------------ | --------------------------------------- |
-| Nominatim | –                        | Free (public instance: 1 req/sec)       |
-| Geoapify  | `GEOAPIFY_API_KEY`       | Allows storing/caching with attribution |
-| Google    | `GOOGLE_GEOCODE_API_KEY` | Has restrictions on storing results     |
-| Mapbox    | `MAPBOX_ACCESS_TOKEN`    | Uses permanent mode; requires billing   |
+### Adding a New Provider
 
-**Example: Switch to Mapbox**
+1. Install the provider package:
 
-```env
-MAPBOX_ACCESS_TOKEN=pk.eyJ1Ijo...
-SIMPLE_ADDRESS_PROVIDER=mapbox
-```
+   ```bash
+   composer require geocoder-php/mapbox-provider
+   ```
 
-All fields now use Mapbox. Override per field in the field configuration.
+2. Publish config:
+
+   ```bash
+   php artisan vendor:publish --tag=simple-address-config
+   ```
+
+3. Add to `config/simple-address.php`:
+
+   ```php
+   'mapbox' => [
+       'class' => \Geocoder\Provider\Mapbox\Mapbox::class,
+       'args' => [
+           env('MAPBOX_API_KEY'),
+           env('MAPBOX_GEOCODING_MODE', 'mapbox.places'),
+       ],
+   ],
+   ```
+
+4. Set environment variable:
+   ```bash
+   SIMPLE_ADDRESS_PROVIDER=mapbox
+   MAPBOX_API_KEY=your-token
+   ```
+
+### Caching
+
+Caching is enabled by default using Laravel's cache system. To customize:
+
+- **Disable caching:** `SIMPLE_ADDRESS_CACHE_ENABLED=false`
+- **Change duration:** `SIMPLE_ADDRESS_CACHE_DURATION=7200` (in seconds)
+- **Use different store:** `SIMPLE_ADDRESS_CACHE_STORE=redis` (must be defined in `config/cache.php`)
 
 ## Provider Notes (Storage & Terms)
 
