@@ -92,6 +92,7 @@ Edit `config/simple-address.php` to add providers or adjust cache settings.
    ```
 
 4. Set environment variable:
+
    ```bash
    SIMPLE_ADDRESS_PROVIDER=mapbox
    MAPBOX_API_KEY=your-token
