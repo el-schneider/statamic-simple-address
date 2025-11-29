@@ -21,7 +21,10 @@ class MapboxProvider extends AbstractProvider
     public function buildSearchRequest(string $query, array $options = []): array
     {
         $url = $this->baseUrl.'/'.urlencode($query).'.json';
-        $params = ['access_token' => $this->apiKey];
+        $params = [
+            'access_token' => $this->apiKey,
+            'permanent' => 'true', // Required for storing geocoded data permanently per Mapbox ToS
+        ];
 
         if (! empty($options['countries'])) {
             $params['country'] = implode(',', array_map('strtolower', $options['countries']));
@@ -37,7 +40,10 @@ class MapboxProvider extends AbstractProvider
     public function buildReverseRequest(float $lat, float $lon, array $options = []): array
     {
         $url = $this->baseUrl."/{$lon},{$lat}.json";
-        $params = ['access_token' => $this->apiKey];
+        $params = [
+            'access_token' => $this->apiKey,
+            'permanent' => 'true', // Required for storing geocoded data permanently per Mapbox ToS
+        ];
 
         if (! empty($options['language'])) {
             $params['language'] = $options['language'];

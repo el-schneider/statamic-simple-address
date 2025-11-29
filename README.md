@@ -50,7 +50,7 @@ Add your API key to `.env`:
 | Nominatim | –                        | Free (public instance: 1 req/sec)       |
 | Geoapify  | `GEOAPIFY_API_KEY`       | Allows storing/caching with attribution |
 | Google    | `GOOGLE_GEOCODE_API_KEY` | Has restrictions on storing results     |
-| Mapbox    | `MAPBOX_ACCESS_TOKEN`    | Permanent storage requires special mode |
+| Mapbox    | `MAPBOX_ACCESS_TOKEN`    | Uses permanent mode; requires billing   |
 
 **Example: Switch to Mapbox**
 
@@ -79,7 +79,8 @@ Different providers have different rules regarding storing geocoded results:
   - Some uses with non-Google maps are restricted
 
 - **Mapbox**
-  - "Temporary" geocoding (default) does not allow storing results permanently
+  - Uses permanent geocoding mode, allowing stored results
+  - Requires valid payment method or enterprise contract on your Mapbox account
 
 ## Custom Providers
 
