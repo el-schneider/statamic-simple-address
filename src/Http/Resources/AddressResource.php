@@ -11,14 +11,29 @@ class AddressResource extends JsonResource
     public function toArray(Request $request): array
     {
         $exclude = $request->input('exclude_fields', []);
-        $data = array_filter($this->resource->toArray(), fn ($v) => $v !== null && $v !== '');
+        $data = $this->resource->toArray();
+        $data = array_filter($data, fn ($v) => $v !== null && $v !== '');
 
-        $output = array_filter([
+        // Convert adminLevels keyed array to stdClass to preserve object structure in JSON
+        if (isset($data['adminLevels']) && is_array($data['adminLevels'])) {
+            $data['adminLevels'] = (object) $data['adminLevels'];
+        }
+
+        $output = [
             'label' => $this->formatLabel(),
             'lat' => (string) $this->getCoordinates()->getLatitude(),
             'lon' => (string) $this->getCoordinates()->getLongitude(),
-            ...$data,
-        ], fn ($v) => $v !== null && $v !== '');
+        ];
+
+        // Add remaining data, preserving keyed structures like adminLevels
+        foreach ($data as $key => $value) {
+            if (! in_array($key, ['label', 'latitude', 'longitude'], true)) {
+                $output[$key] = $value;
+            }
+        }
+
+        // Filter out null and empty values
+        $output = array_filter($output, fn ($v) => $v !== null && $v !== '');
 
         return Arr::except($output, $exclude);
     }
