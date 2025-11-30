@@ -109,14 +109,12 @@ export default {
     },
 
     searchConfig() {
-      const { countries, language, debounce_delay } = this.config
-      const fieldDebounceDelay = debounce_delay || DEFAULT_DEBOUNCE_DELAY
-      const providerMinDelay = this.meta.provider_min_debounce_delay || 0
+      const { countries, language } = this.config
 
       return {
         countries: countries || [],
         language: language || DEFAULT_LANGUAGE,
-        debounceDelay: Math.max(fieldDebounceDelay, providerMinDelay),
+        debounceDelay: DEFAULT_DEBOUNCE_DELAY,
       }
     },
 
@@ -130,9 +128,6 @@ export default {
 
   watch: {
     'searchConfig.debounceDelay'() {
-      this.debouncedSearchFunction = null
-    },
-    'meta.provider_min_debounce_delay'() {
       this.debouncedSearchFunction = null
     },
   },
@@ -172,12 +167,10 @@ export default {
 
     async performAddressSearch(query) {
       const { countries, language } = this.searchConfig
-      const { provider } = this.meta
 
       const payload = {
         query,
-        provider,
-        additional_exclude_fields: this.meta.additional_exclude_fields || [],
+        exclude_fields: this.meta.exclude_fields || [],
         countries,
         language: Array.isArray(language) ? language.join(',') : language,
       }
@@ -209,9 +202,8 @@ export default {
         const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
           lat,
           lon,
-          provider: this.meta.provider,
           language: language || null,
-          additional_exclude_fields: this.meta.additional_exclude_fields || [],
+          exclude_fields: this.meta.exclude_fields || [],
         })
 
         const results = response.data.results || []

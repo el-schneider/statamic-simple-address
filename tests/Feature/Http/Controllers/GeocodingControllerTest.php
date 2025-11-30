@@ -12,9 +12,6 @@ test('that the search endpoint returns a success response', function () {
 
     $response = $this->post('/cp/simple-address/search', [
         'query' => '123 Main St',
-        // 'additional_exclude_fields' => [],
-        // 'countries' => [],
-        // 'language' => 'en',
     ]);
 
     $response->assertStatus(200);

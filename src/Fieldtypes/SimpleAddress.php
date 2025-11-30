@@ -29,16 +29,6 @@ class SimpleAddress extends Fieldtype
                 'width' => 50,
                 'default' => ['en'],
             ],
-            'debounce_delay' => [
-                'type' => 'integer',
-                'display' => __('Search Debounce Delay'),
-                'instructions' => __('Delay in milliseconds before triggering search requests. This is a frontend optimization to reduce API calls while typing. The backend enforces each provider\'s minimum delay requirement automatically.'),
-                'width' => 50,
-                'default' => 300,
-                'min' => 100,
-                'max' => 2000,
-                'required' => true,
-            ],
         ];
     }
 
