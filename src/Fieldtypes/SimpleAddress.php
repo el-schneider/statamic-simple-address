@@ -29,6 +29,11 @@ class SimpleAddress extends Fieldtype
                 'width' => 50,
                 'default' => ['en'],
             ],
+            'exclude_fields' => [
+                'type' => 'taggable',
+                'display' => __('Exclude Fields'),
+                'instructions' => __('Fields to exclude from the address result. Supports dot notation for nested fields and wildcards (e.g. **data.street**, **data.**)'),
+            ],
         ];
     }
 

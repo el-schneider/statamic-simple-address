@@ -2,7 +2,7 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
-use ElSchneider\StatamicSimpleAddress\Data\SearchResponse;
+use ElSchneider\StatamicSimpleAddress\Http\Resources\AddressResource;
 use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Geocoder\Model\Coordinates;
 use Geocoder\Query\GeocodeQuery;
@@ -33,7 +33,9 @@ class GeocodingController
 
             $addressResults = $geocodingService->geocode($geocodeQuery);
 
-            return response()->json(new SearchResponse($addressResults)->toArray());
+            return response()->json([
+                'results' => AddressResource::collection($addressResults)->resolve($request),
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Geocoding failed',
@@ -60,7 +62,9 @@ class GeocodingController
 
             $addressResults = $geocodingService->reverse($reverseQuery);
 
-            return response()->json(new SearchResponse($addressResults)->toArray());
+            return response()->json([
+                'results' => AddressResource::collection($addressResults)->resolve($request),
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Reverse geocoding failed',

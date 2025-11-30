@@ -2,7 +2,6 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
-use ElSchneider\StatamicSimpleAddress\Data\AddressResult;
 use Geocoder\Provider\Cache\ProviderCache;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
@@ -32,34 +31,14 @@ class GeocodingService
         $this->geocoder = new StatefulGeocoder($provider, 'en');
     }
 
-    public function geocode(GeocodeQuery $query): array
+    public function geocode(GeocodeQuery $query)
     {
-        $results = $this->geocoder->geocodeQuery($query);
-
-        return array_map(
-            fn ($address) => new AddressResult(
-                label: $this->formatAddressLabel($address),
-                lat: (string) $address->getCoordinates()->getLatitude(),
-                lon: (string) $address->getCoordinates()->getLongitude(),
-                data: array_filter($address->toArray(), fn ($v) => $v !== null && $v !== ''),
-            ),
-            $results->all()
-        );
+        return $this->geocoder->geocodeQuery($query)->all();
     }
 
-    public function reverse(ReverseQuery $query): array
+    public function reverse(ReverseQuery $query)
     {
-        $results = $this->geocoder->reverseQuery($query);
-
-        return array_map(
-            fn ($address) => new AddressResult(
-                label: $this->formatAddressLabel($address),
-                lat: (string) $address->getCoordinates()->getLatitude(),
-                lon: (string) $address->getCoordinates()->getLongitude(),
-                data: array_filter($address->toArray(), fn ($v) => $v !== null && $v !== ''),
-            ),
-            $results->all()
-        );
+        return $this->geocoder->reverseQuery($query)->all();
     }
 
     private function buildProvider()

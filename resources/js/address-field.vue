@@ -170,7 +170,7 @@ export default {
 
       const payload = {
         query,
-        exclude_fields: this.meta.exclude_fields || [],
+        exclude_fields: this.config.exclude_fields || [],
         countries,
         language: Array.isArray(language) ? language.join(',') : language,
       }
@@ -203,7 +203,7 @@ export default {
           lat,
           lon,
           language: language || null,
-          exclude_fields: this.meta.exclude_fields || [],
+          exclude_fields: this.config.exclude_fields || [],
         })
 
         const results = response.data.results || []
