@@ -3,6 +3,7 @@
 namespace Tests;
 
 use ElSchneider\StatamicSimpleAddress\ServiceProvider;
+use Statamic\Facades\User;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
@@ -21,7 +22,15 @@ abstract class TestCase extends AddonTestCase
         $app['config']['statamic.editions.pro'] = true;
 
         // Load the addon config
-        $app['config']->set('simple-address', require __DIR__.'/../config/simple-address.php');
+        $config = require __DIR__.'/../config/simple-address.php';
+
+        // Use stub provider in tests to avoid external API calls
+        $config['provider'] = 'stub';
+        $config['providers']['stub'] = [
+            'class' => \Tests\Stubs\StubProvider::class,
+        ];
+
+        $app['config']->set('simple-address', $config);
     }
 
     protected function deleteFakeStacheDirectory(): void
@@ -33,5 +42,16 @@ abstract class TestCase extends AddonTestCase
         }
 
         touch($this->fakeStacheDirectory.'/.gitkeep');
+    }
+
+    public function actingAsSuperAdmin()
+    {
+        $admin = User::make()
+            ->email('admin@test.com')
+            ->makeSuper();
+
+        $admin->save();
+
+        return $this->actingAs($admin);
     }
 }
