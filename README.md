@@ -10,27 +10,36 @@ A simple address autocomplete fieldtype for Statamic. Works out of the box with 
 - **Backend routing & caching** – Requests go through your backend and are deduped to stay within rate limits
 - **Interactive map** – Draggable marker with reverse geocoding
 - **YAML preview** – View and verify stored data
-- **Multiple providers** – Nominatim, Geoapify, Google, Mapbox built-in
-- **Extensible** – Create custom providers by extending `AbstractProvider`
+- **Any geocoder-php provider** – Works with 50+ providers from [geocoder-php](https://geocoder-php.org/). Pre-configured examples for Nominatim, Google Maps, and Mapbox
 
 ## Quick Start
 
 Add a Simple Address field to your blueprint.
 
-The field stores a normalized address structure:
+The field stores a normalized address structure. The search and reverse geocoding API endpoints return results in the following format:
 
 ```yaml
-address:
-  label: '221B Baker Street, London, NW1 6XE, United Kingdom'
-  lat: '51.5237540'
-  lon: '-0.1585267'
-  street: Baker Street
-  houseNumber: 221B
-  postcode: NW1 6XE
-  city: London
-  region: Greater London
-  country: United Kingdom
-  countryCode: GB
+label: London, England, United Kingdom
+lat: 51.5072178
+lon: -0.1275862
+providedBy: google_maps
+bounds:
+  south: 51.38494009999999
+  west: -0.3514683
+  north: 51.6723432
+  east: 0.148271
+locality: London
+adminLevels:
+  1:
+    name: England
+    code: England
+    level: 1
+  2:
+    name: Greater London
+    code: Greater London
+    level: 2
+country: United Kingdom
+countryCode: GB
 ```
 
 > **Note:** The default Nominatim setup is ideal for local development. The public Nominatim server has a strict 1 req/sec limit and forbids autocomplete on the client side. For production, most users switch to Geoapify, Google, or Mapbox – all offer free tiers, but usage limits and terms vary.
@@ -138,10 +147,6 @@ Different providers have different rules regarding storing geocoded results:
   - Data is ODbL-licensed; storing OSM-derived data may trigger share-alike obligations
   - For production autocomplete, use your own instance or a commercial provider
 
-- **Geoapify**
-  - Allows caching and storing results; attribution required
-  - Good default for production if you want to persist geodata
-
 - **Google Maps Platform**
   - Geocoded coordinates are generally considered temporary cache, with limited retention
   - Some uses with non-Google maps are restricted
@@ -149,7 +154,3 @@ Different providers have different rules regarding storing geocoded results:
 - **Mapbox**
   - Uses permanent geocoding mode, allowing stored results
   - Requires valid payment method or enterprise contract on your Mapbox account
-
-## Custom Providers
-
-Need a different geocoding API? Extend `AbstractProvider` to integrate any provider. See the built-in providers in `src/Providers/` for examples.

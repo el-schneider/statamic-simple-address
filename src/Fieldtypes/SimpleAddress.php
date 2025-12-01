@@ -32,8 +32,7 @@ class SimpleAddress extends Fieldtype
             'exclude_fields' => [
                 'type' => 'taggable',
                 'display' => __('Exclude Fields'),
-                'instructions' => __('Fields to exclude from the address result. Supports dot notation for nested fields and wildcards (e.g. **data.street**, **data.**)'),
-                'default' => ['bounds', 'adminLevels', 'providedBy'],
+                'instructions' => __('Fields to exclude from the address result. (e.g. **bounds**, **adminLevels**, **providedBy**)'),
             ],
         ];
     }
