@@ -32,41 +32,51 @@ class SimpleAddress extends Fieldtype
             'exclude_fields' => [
                 'type' => 'taggable',
                 'display' => __('Exclude Fields'),
-                'instructions' => __('Exlude fields from being saved, to keep things **simple**.'),
-                'width' => 50,
-                'default' => ['boundingbox', 'class', 'display_name', 'icon', 'importance', 'licence', 'osm_id', 'osm_type', 'place_id'],
+                'instructions' => __('Fields to exclude from the address result. (e.g. **bounds**, **adminLevels**, **providedBy**)'),
             ],
         ];
     }
 
     /**
-     * The blank/default value.
-     *
-     * @return array
+     * Get the active provider name for this field
      */
-    public function defaultValue()
+    protected function getActiveProvider(): string
+    {
+        if (! empty($this->config('provider'))) {
+            return $this->config('provider');
+        }
+
+        return config('simple-address.default_provider', 'nominatim');
+    }
+
+    /**
+     * Pre-process the fieldtype config before sending to the frontend
+     */
+    public function preload(): array
+    {
+        return [];
+    }
+
+    /**
+     * The blank/default value.
+     */
+    public function defaultValue(): ?array
     {
         return null;
     }
 
     /**
      * Pre-process the data before it gets sent to the publish page.
-     *
-     * @param  mixed  $data
-     * @return array|mixed
      */
-    public function preProcess($data)
+    public function preProcess(mixed $data): mixed
     {
         return $data;
     }
 
     /**
      * Process the data before it gets saved.
-     *
-     * @param  mixed  $data
-     * @return array|mixed
      */
-    public function process($data)
+    public function process(mixed $data): mixed
     {
         return $data;
     }

@@ -1,122 +1,279 @@
 <template>
   <div>
-    <v-select
-      ref="select"
-      :value="value"
-      :filterable="false"
-      :options="options"
-      :placeholder="config.placeholder"
-      append-to-body
-      :no-drop="!options.length"
-      @search="onSearch"
-      @input="setSelected"
-    >
-      <template slot="option" slot-scope="option">
-        <div class="d-center">
-          {{ option.label }}
-        </div>
-      </template>
-      <template slot="selected-option" slot-scope="option">
-        <div class="selected d-center">
-          {{ option.label }}
-        </div>
-      </template>
-    </v-select>
+    <!-- Address Select with inline details button -->
+    <div class="simple-address-select-wrapper">
+      <v-select
+        ref="select"
+        :value="value"
+        :filterable="false"
+        :options="options"
+        :placeholder="config.placeholder"
+        :components="selectComponents"
+        append-to-body
+        :no-drop="!options.length"
+        @search="onSearch"
+        @input="setSelected"
+      >
+        <template #option="{ label }">
+          <div v-text="label" />
+        </template>
+        <template #selected-option="{ label }">
+          <div v-text="label" />
+        </template>
+        <template #no-options>
+          <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
+        </template>
+      </v-select>
+
+      <!-- Details Toggle Button (inside select) -->
+      <button v-if="value" type="button" class="simple-address-details-btn" @click.stop="toggleDetails">
+        {{ detailsButtonText }}
+      </button>
+    </div>
+
+    <!-- Address Details Panel -->
+    <address-details-panel
+      v-if="showDetails && value"
+      ref="detailsPanel"
+      :address="value"
+      @coordinates-changed="onCoordinatesChanged"
+    />
   </div>
 </template>
 
 <script>
 import vSelect from 'vue-select'
-import debounce from 'lodash.debounce'
+import debounce from './utils/debounce'
+import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
 
-// TODO: Figure out how to remove this stuff...
-vSelect.props.components.default = () => ({
-  Deselect: {
-    render: (createElement) => createElement('span', __('×')),
-  },
-  OpenIndicator: {
-    render: (createElement) =>
-      createElement('span', {
-        class: { toggle: true },
-        domProps: {
-          innerHTML:
-            '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 20 20"><path fill="currentColor" d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>',
-        },
-      }),
-  },
-})
+// Constants
+const DEFAULT_LANGUAGE = 'en'
+const DEFAULT_DEBOUNCE_DELAY = 300
 
 export default {
+  name: 'SimpleAddressField',
+
   components: {
     vSelect,
+    AddressDetailsPanel,
   },
+
   mixins: [Fieldtype],
+
   data() {
     return {
       options: [],
+      debouncedSearchFunction: null,
+      showDetails: false,
     }
   },
+
+  computed: {
+    selectComponents() {
+      return {
+        Deselect: this.deselectComponent,
+        OpenIndicator: this.openIndicatorComponent,
+      }
+    },
+
+    deselectComponent() {
+      return {
+        render: (createElement) => createElement('span', '×'),
+      }
+    },
+
+    openIndicatorComponent() {
+      return {
+        render: (createElement) =>
+          createElement('span', {
+            class: { toggle: true },
+            domProps: {
+              innerHTML: this.chevronDownIcon,
+            },
+          }),
+      }
+    },
+
+    chevronDownIcon() {
+      return `<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 20 20">
+        <path fill="currentColor" d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+      </svg>`
+    },
+
+    noOptionsText() {
+      return this.__('No options to choose from.')
+    },
+
+    detailsButtonText() {
+      return this.__('details')
+    },
+
+    searchConfig() {
+      const { countries, language } = this.config
+
+      return {
+        countries: countries || [],
+        language: language || DEFAULT_LANGUAGE,
+        debounceDelay: DEFAULT_DEBOUNCE_DELAY,
+      }
+    },
+
+    debouncedSearch() {
+      if (!this.debouncedSearchFunction) {
+        this.debouncedSearchFunction = debounce(this.performSearch.bind(this), this.searchConfig.debounceDelay)
+      }
+      return this.debouncedSearchFunction
+    },
+  },
+
+  watch: {
+    'searchConfig.debounceDelay'() {
+      this.debouncedSearchFunction = null
+    },
+  },
+
   methods: {
     setSelected(value) {
       this.update(value)
+      // Close details panel when a new address is selected
+      this.showDetails = false
     },
+
+    toggleDetails() {
+      this.showDetails = !this.showDetails
+    },
+
     onSearch(search, loading) {
-      if (search.length) {
-        loading(true)
-        this.search(loading, search, this)
+      if (!search?.length) {
+        this.options = []
+        loading(false)
+        return
+      }
+
+      loading(true)
+      this.debouncedSearch(loading, search)
+    },
+
+    async performSearch(loading, search) {
+      try {
+        const response = await this.performAddressSearch(search)
+        this.options = this.processSearchResults(response.results || [])
+      } catch (error) {
+        this.handleSearchError(error)
+      } finally {
+        loading(false)
       }
     },
-    search: debounce((loading, search, vm) => {
-      const { countries, language, exclude_fields } = vm.config
 
-      const options = {
-        addressdetails: 1,
-        namedetails: 1,
-        format: 'json',
-        'accept-language': language || 'en',
+    async performAddressSearch(query) {
+      const { countries, language } = this.searchConfig
+
+      const payload = {
+        query,
+        exclude_fields: this.config.exclude_fields || [],
+        countries,
+        language: Array.isArray(language) ? language.join(',') : language,
       }
 
-      if (countries) {
-        options.countrycodes = countries.join(',')
+      const response = await Statamic.$axios.post('/cp/simple-address/search', payload)
+      return response.data
+    },
+
+    processSearchResults(data) {
+      return data.map((item) => ({
+        label: item.label,
+        value: item,
+      }))
+    },
+
+    handleSearchError(error) {
+      console.error('Address search failed:', error)
+
+      const message = error.response?.data?.message || this.__('Failed to search addresses. Please try again.')
+      this.$toast.error(this.__(message))
+    },
+
+    async onCoordinatesChanged({ lat, lon }) {
+      try {
+        const language = Array.isArray(this.searchConfig.language)
+          ? this.searchConfig.language.join(',')
+          : this.searchConfig.language
+
+        const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
+          lat,
+          lon,
+          language: language || null,
+          exclude_fields: this.config.exclude_fields || [],
+        })
+
+        const results = response.data.results || []
+
+        if (results.length > 0) {
+          this.update(results[0])
+          this.$toast.success(this.__('Address updated from map'))
+        } else {
+          // No address found - keep existing data but update coordinates
+          // The user's position choice is always respected
+          this.updateCoordinatesOnly(lat, lon)
+          this.$toast.info(this.__('Coordinates updated'))
+        }
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error)
+        const message = error.response?.data?.message || this.__('Failed to lookup address. Please try again.')
+        this.$toast.error(this.__(message))
+        // Revert marker on error
+        this.$refs.detailsPanel?.revertMarkerPosition()
       }
+    },
 
-      const params = new URLSearchParams(options)
-
-      const url = `https://nominatim.openstreetmap.org/search?${params}&q=${search}`
-
-      fetch(url, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const options = data.map((_item) => {
-            const item = { label: _item.display_name, ..._item }
-
-            exclude_fields.forEach((field) => {
-              //check if field exists and remove it
-              if (item[field]) delete item[field]
-            })
-
-            for (const key in item.namedetails) {
-              //if key contains a colon remove it
-              if (key.indexOf(':') > -1) {
-                delete item.namedetails[key]
-              }
-            }
-
-            return item
-          })
-
-          vm.options = options
+    updateCoordinatesOnly(lat, lon) {
+      const currentValue = this.value?.value || this.value
+      if (currentValue) {
+        this.update({
+          ...currentValue,
+          lat,
+          lon,
         })
-        .catch((error) => console.error(error))
-        .finally(() => {
-          loading(false)
-        })
-    }, 300),
+      }
+    },
   },
 }
 </script>
+
+<style scoped>
+/* Remove webkit search cancel button */
+:deep(.vs__search::-webkit-search-cancel-button) {
+  appearance: none;
+}
+
+/* Select wrapper for positioning details button */
+.simple-address-select-wrapper {
+  position: relative;
+}
+
+/* Details button positioned inside the select */
+.simple-address-details-btn {
+  position: absolute;
+  top: 50%;
+  right: 22px; /* Space for deselect button */
+  transform: translateY(-50%);
+  z-index: 1;
+  padding: 2px 8px 1px 8px;
+  font-size: 12px;
+  color: rgb(67 169 255);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff 15%, #fff 100%);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.simple-address-details-btn:hover {
+  color: rgb(47 149 235);
+  text-decoration: underline;
+}
+
+/* Ensure selected option doesn't overlap with details button */
+:deep(.vs__selected) {
+  padding-right: 60px;
+}
+</style>
