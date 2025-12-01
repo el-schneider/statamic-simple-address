@@ -18,8 +18,7 @@
     "statamic/cms": "^5.0",
     "geocoder-php/nominatim-provider": "^5.8",
     "geocoder-php/cache-provider": "^4.0",
-    "guzzlehttp/guzzle": "^7.10",
-    "toin0u/geocoder-laravel": "^5.0"
+    "guzzlehttp/guzzle": "^7.10"
   },
   "extra": {
     "statamic": {
