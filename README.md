@@ -10,7 +10,7 @@ A simple address autocomplete fieldtype for Statamic. Works out of the box with 
 - **Backend routing & caching** – Requests go through your backend and are deduped to stay within rate limits
 - **Interactive map** – Draggable marker with reverse geocoding
 - **YAML preview** – View and verify stored data
-- **Any geocoder-php provider** – Works with 50+ providers from [geocoder-php](https://geocoder-php.org/). Pre-configured examples for Nominatim, Google Maps, and Mapbox
+- **Any geocoder-php provider** – Works with 30+ providers from [geocoder-php](https://geocoder-php.org/). Pre-configured examples for Nominatim, Google Maps, and Mapbox
 
 ## Quick Start
 
