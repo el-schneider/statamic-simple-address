@@ -94,31 +94,4 @@ class GeocodingService
     {
         return $config['args'] ?? [];
     }
-
-    private function formatAddressLabel($location): string
-    {
-        $parts = [];
-
-        if ($location->getStreetNumber()) {
-            $parts[] = $location->getStreetNumber();
-        }
-
-        if ($location->getStreetName()) {
-            $parts[] = $location->getStreetName();
-        }
-
-        if ($location->getLocality()) {
-            $parts[] = $location->getLocality();
-        }
-
-        if ($location->getAdminLevels()->first()?->getName()) {
-            $parts[] = $location->getAdminLevels()->first()->getName();
-        }
-
-        if ($location->getCountry()?->getName()) {
-            $parts[] = $location->getCountry()->getName();
-        }
-
-        return implode(', ', $parts);
-    }
 }
