@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 
 class GeocodingController
 {
+    public function __construct(
+        private GeocodingService $geocodingService
+    ) {}
+
     public function search(Request $request): JsonResponse
     {
         $query = $request->input('query');
@@ -19,8 +23,6 @@ class GeocodingController
         $language = $request->input('language');
 
         try {
-            $geocodingService = new GeocodingService;
-
             $geocodeQuery = GeocodeQuery::create($query);
 
             if (! empty($countries)) {
@@ -31,7 +33,7 @@ class GeocodingController
                 $geocodeQuery = $geocodeQuery->withLocale($language);
             }
 
-            $addressResults = $geocodingService->geocode($geocodeQuery);
+            $addressResults = $this->geocodingService->geocode($geocodeQuery);
 
             return response()->json([
                 'results' => AddressResource::collection($addressResults)->resolve($request),
@@ -51,8 +53,6 @@ class GeocodingController
         $language = $request->input('language');
 
         try {
-            $geocodingService = new GeocodingService;
-
             $coordinates = new Coordinates((float) $lat, (float) $lon);
             $reverseQuery = ReverseQuery::create($coordinates);
 
@@ -60,7 +60,7 @@ class GeocodingController
                 $reverseQuery = $reverseQuery->withLocale($language);
             }
 
-            $addressResults = $geocodingService->reverse($reverseQuery);
+            $addressResults = $this->geocodingService->reverse($reverseQuery);
 
             return response()->json([
                 'results' => AddressResource::collection($addressResults)->resolve($request),
