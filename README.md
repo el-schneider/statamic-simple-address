@@ -1,6 +1,6 @@
 <img src="images/saf_banner.png" alt="Auto Alt Text">
 
-> **Disclaimer**: Statamic Simple Address is still in its early stages and under active development, so features and APIs may change.
+> **Disclaimer**: Statamic Simple Address recently underwent a complete rewrite and is now under active development, so features and APIs may change.
 
 # Statamic Simple Address
 
@@ -74,7 +74,7 @@ php artisan vendor:publish --tag=simple-address-config
 composer require geocoder-php/google-maps-provider
 ```
 
-```bash
+```ini
 SIMPLE_ADDRESS_PROVIDER=google
 GOOGLE_GEOCODE_API_KEY=your-api-key
 ```
@@ -85,7 +85,7 @@ GOOGLE_GEOCODE_API_KEY=your-api-key
 composer require geocoder-php/mapbox-provider
 ```
 
-```bash
+```ini
 SIMPLE_ADDRESS_PROVIDER=mapbox
 MAPBOX_API_KEY=your-token
 ```
@@ -99,4 +99,4 @@ The published config includes commented examples for Google and Mapbox. For othe
 ],
 ```
 
-See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available providers and their constructor arguments.
+See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available providers and their constructor arguments. Thanks to [geocoder-php](https://github.com/geocoder-php/Geocoder) for making multi-provider geocoding easy.
