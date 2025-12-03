@@ -11,7 +11,7 @@ A simple address autocomplete fieldtype for Statamic. Works out of the box with 
 ## Features
 
 - **Zero-config setup** – Uses Nominatim (OpenStreetMap) by default
-- **Backend routing & caching** – Requests go through your backend and are deduped to stay within rate limits
+- **Backend routing** – Requests go through your backend and are deduped
 - **Interactive map** – Draggable marker with reverse geocoding
 - **YAML preview** – View and verify stored data
 - **Any geocoder-php provider** – Works with 30+ providers from [geocoder-php](https://geocoder-php.org/). Pre-configured examples for Nominatim, Google Maps, and Mapbox
@@ -20,7 +20,7 @@ A simple address autocomplete fieldtype for Statamic. Works out of the box with 
 
 Add a Simple Address field to your blueprint.
 
-The field stores a normalized address structure. The search and reverse geocoding API endpoints return results in the following format:
+The field stores a normalized address structure:
 
 ```yaml
 label: London, England, United Kingdom
@@ -50,86 +50,53 @@ countryCode: GB
 
 ## Configuration
 
-### Basic Setup (Out of the Box)
-
-The addon ships with Nominatim as the default provider and caching enabled. No configuration needed—everything works immediately:
-
 ```bash
 composer require el-schneider/statamic-simple-address
 ```
 
-### Customizing Providers
+Works immediately with Nominatim as the default provider.
 
-To switch to a different provider or customize settings, you can:
+### Using a Different Provider
 
-#### Option 1: Environment Variables
+To switch from Nominatim to another provider:
 
-```bash
-SIMPLE_ADDRESS_PROVIDER=mapbox
-SIMPLE_ADDRESS_CACHE_DURATION=3600
-SIMPLE_ADDRESS_CACHE_ENABLED=false
-```
-
-#### Option 2: Publish Configuration
+1. Install the provider package
+2. Publish the config and add/uncomment the provider entry
+3. Set the required environment variables
 
 ```bash
 php artisan vendor:publish --tag=simple-address-config
 ```
 
-Edit `config/simple-address.php` to add providers or adjust cache settings.
-
-#### Example Configurations
-
-The published config file includes example configurations for popular providers (Mapbox, Google Maps) commented out. To use them:
-
-1. **Uncomment** the provider configuration in `config/simple-address.php`
-2. **Install** the corresponding Geocoder provider package
-3. **Set** the required API key via environment variables
-
-For example, to use Google Maps:
+#### Google Maps
 
 ```bash
-# 1. Install the provider
 composer require geocoder-php/google-maps-provider
-
-# 2. Uncomment 'google' in config/simple-address.php
-
-# 3. Set your API key
-GOOGLE_GEOCODE_API_KEY=your-api-key
-SIMPLE_ADDRESS_PROVIDER=google
 ```
 
-See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available providers, their constructor arguments, and setup requirements.
+```bash
+SIMPLE_ADDRESS_PROVIDER=google
+GOOGLE_GEOCODE_API_KEY=your-api-key
+```
 
-### Adding a New Provider
+#### Mapbox
 
-1. Install the provider package:
+```bash
+composer require geocoder-php/mapbox-provider
+```
 
-   ```bash
-   composer require geocoder-php/mapbox-provider
-   ```
+```bash
+SIMPLE_ADDRESS_PROVIDER=mapbox
+MAPBOX_API_KEY=your-token
+```
 
-2. Publish config:
+The published config includes commented examples for Google and Mapbox. For other providers, add an entry to `config/simple-address.php`:
 
-   ```bash
-   php artisan vendor:publish --tag=simple-address-config
-   ```
+```php
+'my_provider' => [
+    'class' => \Geocoder\Provider\MyProvider\MyProvider::class,
+    'args' => [env('MY_PROVIDER_API_KEY')],
+],
+```
 
-3. Add to `config/simple-address.php`:
-
-   ```php
-   'mapbox' => [
-       'class' => \Geocoder\Provider\Mapbox\Mapbox::class,
-       'args' => [
-           env('MAPBOX_API_KEY'),
-           env('MAPBOX_GEOCODING_MODE', 'mapbox.places'),
-       ],
-   ],
-   ```
-
-4. Set environment variable:
-
-   ```bash
-   SIMPLE_ADDRESS_PROVIDER=mapbox
-   MAPBOX_API_KEY=your-token
-   ```
+See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available providers and their constructor arguments.
