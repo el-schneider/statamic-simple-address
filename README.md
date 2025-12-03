@@ -1,8 +1,12 @@
+<img src="images/saf_banner.png" alt="Auto Alt Text">
+
+> **Disclaimer**: Statamic Simple Address is still in its early stages and under active development, so features and APIs may change.
+
 # Statamic Simple Address
 
 A simple address autocomplete fieldtype for Statamic. Works out of the box with no API keys needed.
 
-**Simple by default – flexible when you need it.**
+**Simple by default – flexible when needed.**
 
 ## Features
 
