@@ -21,14 +21,39 @@ class ServiceProvider extends AddonServiceProvider
         'publicDirectory' => 'resources/dist',
     ];
 
-    public function register()
+    public function boot(): void
     {
-        parent::register();
+        parent::boot();
 
+        $this->registerConfiguration();
+        $this->registerServices();
+        $this->registerRoutes();
+    }
+
+    /**
+     * Register configuration files and publish paths.
+     */
+    private function registerConfiguration(): void
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/simple-address.php', 'simple-address');
+
+        $this->publishes([
+            __DIR__.'/../config/simple-address.php' => config_path('simple-address.php'),
+        ], 'simple-address-config');
+    }
+
+    /**
+     * Register all core services in the container.
+     */
+    private function registerServices(): void
+    {
         $this->app->singleton(GeocodingService::class);
     }
 
-    public function bootAddon()
+    /**
+     * Register CP routes for geocoding endpoints.
+     */
+    private function registerRoutes(): void
     {
         $this->registerCpRoutes(function () {
             Route::post('simple-address/search', [GeocodingController::class, 'search'])
@@ -36,14 +61,5 @@ class ServiceProvider extends AddonServiceProvider
             Route::post('simple-address/reverse', [GeocodingController::class, 'reverse'])
                 ->name('simple-address.reverse');
         });
-    }
-
-    public function boot()
-    {
-        parent::boot();
-
-        $this->publishes([
-            __DIR__.'/../config/simple-address.php' => config_path('simple-address.php'),
-        ], 'simple-address-config');
     }
 }
