@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1 - 2025-12-03
+
+### Whats'fixed
+
+- Add mergeConfigFrom and clean up ServiceProvider
+
 ## v0.2.0 - 2025-12-01
 
 ### What's new
