@@ -133,28 +133,3 @@ See [Geocoder PHP docs](https://geocoder-php.org/docs/#providers) for available 
    SIMPLE_ADDRESS_PROVIDER=mapbox
    MAPBOX_API_KEY=your-token
    ```
-
-### Caching
-
-Caching is enabled by default using Laravel's cache system. To customize:
-
-- **Disable caching:** `SIMPLE_ADDRESS_CACHE_ENABLED=false`
-- **Change duration:** `SIMPLE_ADDRESS_CACHE_DURATION=7200` (in seconds)
-- **Use different store:** `SIMPLE_ADDRESS_CACHE_STORE=redis` (must be defined in `config/cache.php`)
-
-## Provider Notes (Storage & Terms)
-
-Different providers have different rules regarding storing geocoded results:
-
-- **Nominatim / OpenStreetMap**
-  - Public server: strict rate limit, autocomplete not allowed
-  - Data is ODbL-licensed; storing OSM-derived data may trigger share-alike obligations
-  - For production autocomplete, use your own instance or a commercial provider
-
-- **Google Maps Platform**
-  - Geocoded coordinates are generally considered temporary cache, with limited retention
-  - Some uses with non-Google maps are restricted
-
-- **Mapbox**
-  - Uses permanent geocoding mode, allowing stored results
-  - Requires valid payment method or enterprise contract on your Mapbox account
