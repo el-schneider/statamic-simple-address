@@ -9,6 +9,7 @@ use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GeocodingController
 {
@@ -39,10 +40,7 @@ class GeocodingController
                 'results' => AddressResource::collection($addressResults)->resolve($request),
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Geocoding failed',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 500);
+            return $this->handleGeocodingError($e);
         }
     }
 
@@ -66,10 +64,20 @@ class GeocodingController
                 'results' => AddressResource::collection($addressResults)->resolve($request),
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Reverse geocoding failed',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 500);
+            return $this->handleGeocodingError($e);
         }
+    }
+
+    private function handleGeocodingError(\Exception $e): JsonResponse
+    {
+        Log::error('Geocoding failed', [
+            'exception' => get_class($e),
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return response()->json([
+            'message' => 'Geocoding failed. Check the logs for more information.',
+        ], 500);
     }
 }

@@ -73,7 +73,9 @@ class GeocodingService
 
         if (config('app.debug')) {
             $stack = HandlerStack::create();
-            $stack->push(Middleware::tap(function ($request) {
+
+            // Log outgoing requests
+            $stack->push(Middleware::mapRequest(function ($request) {
                 Log::debug('Guzzle request', [
                     'method' => $request->getMethod(),
                     'url' => (string) $request->getUri(),
@@ -82,6 +84,20 @@ class GeocodingService
                 ]);
                 // Reset stream position after logging
                 $request->getBody()->rewind();
+
+                return $request;
+            }));
+
+            // Log incoming responses
+            $stack->push(Middleware::mapResponse(function ($response) {
+                Log::debug('Guzzle response', [
+                    'status_code' => $response->getStatusCode(),
+                    'reason_phrase' => $response->getReasonPhrase(),
+                    'headers' => $response->getHeaders(),
+                    'body' => (string) $response->getBody(),
+                ]);
+
+                return $response;
             }));
 
             $config['handler'] = $stack;
