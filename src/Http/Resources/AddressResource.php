@@ -40,11 +40,14 @@ class AddressResource extends JsonResource
 
     private function formatLabel(): string
     {
+        $adminLevels = $this->getAdminLevels();
+        $adminLevel = (count($adminLevels) > 0) ? $adminLevels->first() : null;
+
         $parts = array_filter([
             $this->getStreetNumber(),
             $this->getStreetName(),
             $this->getLocality(),
-            $this->getAdminLevels()->first()?->getName(),
+            $adminLevel?->getName(),
             $this->getCountry()?->getName(),
         ]);
 
