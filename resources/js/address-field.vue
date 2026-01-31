@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, getCurrentInstance } from 'vue'
+import { ref, computed, watch, getCurrentInstance, onBeforeUnmount } from 'vue'
 import { Fieldtype } from '@statamic/cms'
 import { Combobox } from '@statamic/cms/ui'
 import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
@@ -51,7 +51,9 @@ const DEBOUNCE_DELAY = 300
 
 // Get global properties (including $axios, $toast)
 const instance = getCurrentInstance()
-const { $axios, $toast } = instance.appContext.config.globalProperties
+const globalProperties = instance?.appContext?.config?.globalProperties ?? {}
+const http = globalProperties.$axios ?? Statamic?.$axios
+const toast = globalProperties.$toast ?? Statamic?.$toast
 
 // Fieldtype setup
 const emit = defineEmits(Fieldtype.emits)
@@ -79,12 +81,14 @@ function getAddressKey(address) {
   const lon = data.lon ?? ''
 
   // Stable, human-safe key for Combobox selection
-  return `${label}|${lat}|${lon}`
+  return JSON.stringify([label, lat, lon])
 }
+
+const normalizedValue = computed(() => getAddressData(props.value) ?? null)
 
 const selectedKey = computed({
   get() {
-    return props.value ? getAddressKey(props.value) : null
+    return normalizedValue.value ? getAddressKey(normalizedValue.value) : null
   },
   set(newKey) {
     if (!newKey) {
@@ -94,7 +98,11 @@ const selectedKey = computed({
     }
 
     const selected = options.value.find((opt) => opt.value === newKey)
-    update(selected?.address ?? null)
+    if (!selected) {
+      return
+    }
+
+    update(selected.address ?? null)
     showDetails.value = false
   },
 })
@@ -107,6 +115,10 @@ const searchConfig = computed(() => {
     language: language || DEFAULT_LANGUAGE,
   }
 })
+
+function normalizeLanguage(language) {
+  return Array.isArray(language) ? language.join(',') : language
+}
 
 // Methods
 function toggleDetails() {
@@ -146,10 +158,14 @@ async function performAddressSearch(query) {
     query,
     exclude_fields: props.config.exclude_fields || [],
     countries,
-    language: Array.isArray(language) ? language.join(',') : language,
+    language: normalizeLanguage(language),
   }
 
-  const response = await $axios.post('/cp/simple-address/search', payload)
+  if (!http) {
+    throw new Error('No HTTP client available')
+  }
+
+  const response = await http.post('/cp/simple-address/search', payload)
   return response.data
 }
 
@@ -165,16 +181,18 @@ function handleSearchError(error) {
   console.error('Address search failed:', error)
 
   const message = error.response?.data?.message || __('Failed to search addresses. Please try again.')
-  $toast.error(__(message))
+  toast?.error(__(message))
 }
 
 async function onCoordinatesChanged({ lat, lon }) {
   try {
-    const language = Array.isArray(searchConfig.value.language)
-      ? searchConfig.value.language.join(',')
-      : searchConfig.value.language
+    const language = normalizeLanguage(searchConfig.value.language)
 
-    const response = await $axios.post('/cp/simple-address/reverse', {
+    if (!http) {
+      throw new Error('No HTTP client available')
+    }
+
+    const response = await http.post('/cp/simple-address/reverse', {
       lat,
       lon,
       language: language || null,
@@ -185,23 +203,23 @@ async function onCoordinatesChanged({ lat, lon }) {
 
     if (results.length > 0) {
       update(results[0])
-      $toast.success(__('Address updated from map'))
+      toast?.success(__('Address updated from map'))
     } else {
       // No address found - keep existing data but update coordinates
       updateCoordinatesOnly(lat, lon)
-      $toast.info(__('Coordinates updated'))
+      toast?.info(__('Coordinates updated'))
     }
   } catch (error) {
     console.error('Reverse geocoding failed:', error)
     const message = error.response?.data?.message || __('Failed to lookup address. Please try again.')
-    $toast.error(__(message))
+    toast?.error(__(message))
     // Revert marker on error
     detailsPanel.value?.revertMarkerPosition()
   }
 }
 
 function updateCoordinatesOnly(lat, lon) {
-  const currentValue = props.value?.value || props.value
+  const currentValue = normalizedValue.value
   if (currentValue) {
     update({
       ...currentValue,
@@ -211,15 +229,11 @@ function updateCoordinatesOnly(lat, lon) {
   }
 }
 
-// Cleanup on component unmount
-watch(
-  () => searchTimeout.value,
-  (_, oldTimeout) => {
-    if (oldTimeout) {
-      clearTimeout(oldTimeout)
-    }
-  },
-)
+onBeforeUnmount(() => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
+})
 
 // Ensure the current value is always selectable/displayable.
 watch(

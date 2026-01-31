@@ -60,6 +60,8 @@ If you install/update the addon via Composer, publish the Control Panel assets s
 
 ```bash
 php artisan vendor:publish --tag=statamic-simple-address --force
+# or (assets only)
+php artisan vendor:publish --tag=statamic-simple-address-assets --force
 ```
 
 If you install via Statamic's addon installer, this is typically done automatically.
