@@ -22,7 +22,7 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@vitejs/plugin-vue2": "^2.3.3",
+    "@statamic/cms": "file:./vendor/statamic/cms/resources/dist-package",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.5.1",
@@ -32,11 +32,9 @@
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "vite": "^7.2.2",
-    "vue": "^2.7.14",
     "vue-eslint-parser": "^10.2.0"
   },
   "dependencies": {
-    "leaflet": "^1.9.4",
-    "vue-select": "^3.20.4"
+    "leaflet": "^1.9.4"
   }
 }
