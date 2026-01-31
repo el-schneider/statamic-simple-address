@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Statamic Simple Address**. A simple address autocomplete fieldtype for Statamic v5. Works out of the box with Nominatim (OpenStreetMap) and supports 30+ geocoding providers via geocoder-php.
+**Statamic Simple Address**. A simple address autocomplete fieldtype for Statamic v6. Works out of the box with Nominatim (OpenStreetMap) and supports 30+ geocoding providers via geocoder-php.
 
 ## Development Commands
 
@@ -30,9 +30,10 @@ A full Laravel test app is available at `../statamic-simple-address-v6` and can 
 
 **Credentials:**
 
-- Email: `claude@claude.ai`
-- Password: `claude`
+- Email: `agent@agent.md`
+- Password: `agent`
 - Login URL: `http://statamic-simple-address-v6.test/cp`
+- Test Page URL: `http://statamic-simple-address-v6.test/cp/collections/pages/entries/4e8a2abf-764e-4001-b57f-2de19029f358`
 
 For programmatic testing, use your agent-browser skill or curl with session cookies.
 
