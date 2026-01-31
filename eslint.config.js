@@ -10,7 +10,7 @@ export default defineConfig([
     files: ['**/*.{js,vue}'],
   },
   js.configs.recommended,
-  ...pluginVue.configs['flat/vue2-recommended'],
+  ...pluginVue.configs['flat/recommended'],
   {
     languageOptions: {
       sourceType: 'module',
