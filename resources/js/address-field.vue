@@ -3,7 +3,7 @@
     <!-- Address Combobox with inline details button -->
     <div class="simple-address-select-wrapper">
       <Combobox
-        v-model="selectedValue"
+        v-model="selectedKey"
         :options="options"
         :placeholder="config.placeholder || __('Search for an address...')"
         :searchable="true"
@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, getCurrentInstance } from 'vue'
 import { Fieldtype } from '@statamic/cms'
 import { Combobox } from '@statamic/cms/ui'
 import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
@@ -48,6 +48,10 @@ import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
 // Constants
 const DEFAULT_LANGUAGE = 'en'
 const DEBOUNCE_DELAY = 300
+
+// Get global properties (including $axios, $toast)
+const instance = getCurrentInstance()
+const { $axios, $toast } = instance.appContext.config.globalProperties
 
 // Fieldtype setup
 const emit = defineEmits(Fieldtype.emits)
@@ -62,16 +66,35 @@ const detailsPanel = ref(null)
 const searchTimeout = ref(null)
 
 // Computed
-const selectedValue = computed({
+function getAddressData(address) {
+  return address?.value || address
+}
+
+function getAddressKey(address) {
+  const data = getAddressData(address)
+  if (!data) return null
+
+  const label = data.label ?? ''
+  const lat = data.lat ?? ''
+  const lon = data.lon ?? ''
+
+  // Stable, human-safe key for Combobox selection
+  return `${label}|${lat}|${lon}`
+}
+
+const selectedKey = computed({
   get() {
-    if (!props.value) return null
-    // Return the value in the format Combobox expects
-    return props.value
+    return props.value ? getAddressKey(props.value) : null
   },
-  set(newValue) {
-    // When selection changes, update the field value
-    // newValue will be the option.value (the address object)
-    update(newValue)
+  set(newKey) {
+    if (!newKey) {
+      update(null)
+      showDetails.value = false
+      return
+    }
+
+    const selected = options.value.find((opt) => opt.value === newKey)
+    update(selected?.address ?? null)
     showDetails.value = false
   },
 })
@@ -126,14 +149,15 @@ async function performAddressSearch(query) {
     language: Array.isArray(language) ? language.join(',') : language,
   }
 
-  const response = await Statamic.$axios.post('/cp/simple-address/search', payload)
+  const response = await $axios.post('/cp/simple-address/search', payload)
   return response.data
 }
 
 function processSearchResults(data) {
   return data.map((item) => ({
     label: item.label,
-    value: item,
+    value: getAddressKey(item),
+    address: item,
   }))
 }
 
@@ -141,7 +165,7 @@ function handleSearchError(error) {
   console.error('Address search failed:', error)
 
   const message = error.response?.data?.message || __('Failed to search addresses. Please try again.')
-  Statamic.$toast.error(__(message))
+  $toast.error(__(message))
 }
 
 async function onCoordinatesChanged({ lat, lon }) {
@@ -150,7 +174,7 @@ async function onCoordinatesChanged({ lat, lon }) {
       ? searchConfig.value.language.join(',')
       : searchConfig.value.language
 
-    const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
+    const response = await $axios.post('/cp/simple-address/reverse', {
       lat,
       lon,
       language: language || null,
@@ -161,16 +185,16 @@ async function onCoordinatesChanged({ lat, lon }) {
 
     if (results.length > 0) {
       update(results[0])
-      Statamic.$toast.success(__('Address updated from map'))
+      $toast.success(__('Address updated from map'))
     } else {
       // No address found - keep existing data but update coordinates
       updateCoordinatesOnly(lat, lon)
-      Statamic.$toast.info(__('Coordinates updated'))
+      $toast.info(__('Coordinates updated'))
     }
   } catch (error) {
     console.error('Reverse geocoding failed:', error)
     const message = error.response?.data?.message || __('Failed to lookup address. Please try again.')
-    Statamic.$toast.error(__(message))
+    $toast.error(__(message))
     // Revert marker on error
     detailsPanel.value?.revertMarkerPosition()
   }
@@ -195,6 +219,23 @@ watch(
       clearTimeout(oldTimeout)
     }
   },
+)
+
+// Ensure the current value is always selectable/displayable.
+watch(
+  () => props.value,
+  (newValue) => {
+    const data = getAddressData(newValue)
+    if (!data) return
+
+    const key = getAddressKey(data)
+    if (!key) return
+
+    if (!options.value.some((opt) => opt.value === key)) {
+      options.value = [{ label: data.label, value: key, address: data }, ...options.value]
+    }
+  },
+  { immediate: true, deep: true },
 )
 </script>
 

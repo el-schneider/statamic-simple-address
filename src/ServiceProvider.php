@@ -25,6 +25,10 @@ class ServiceProvider extends AddonServiceProvider
     {
         parent::boot();
 
+        $this->publishes([
+            __DIR__.'/../resources/dist/build' => public_path('vendor/statamic-simple-address/build'),
+        ], 'statamic-simple-address-assets');
+
         $this->registerConfiguration();
         $this->registerServices();
         $this->registerRoutes();
