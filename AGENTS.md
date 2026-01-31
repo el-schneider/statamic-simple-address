@@ -38,3 +38,8 @@ A full Laravel test app is available at `../statamic-simple-address-v6` and can 
 For programmatic testing, use your agent-browser skill or curl with session cookies.
 
 See logs at `../statamic-simple-address-v6/storage/logs/laravel.log` when debugging.
+
+## Off-Limits Files
+
+- **`resources/dist/`** - Built by CI. Do NOT run `npm run build`.
+- **`CHANGELOG.md`** - Updated by CI on release. Do NOT edit.
