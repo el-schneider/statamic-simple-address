@@ -17,10 +17,41 @@ function statamicExternals() {
 
     load(id) {
       if (id === '\0vue-external') {
+        // Export all Vue exports dynamically - the window.Vue object contains everything
         return `
           const Vue = window.Vue;
           export default Vue;
-          export const { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount, nextTick, toRef, toRefs, reactive, readonly, shallowRef, shallowReactive, triggerRef, customRef, markRaw, toRaw, isRef, isReactive, isReadonly, isProxy } = Vue;
+          
+          // Re-export everything from Vue
+          export const {
+            // Reactivity
+            ref, computed, watch, watchEffect, reactive, readonly, shallowRef, shallowReactive,
+            triggerRef, customRef, markRaw, toRaw, isRef, isReactive, isReadonly, isProxy,
+            toRef, toRefs, unref,
+            
+            // Lifecycle
+            onMounted, onBeforeMount, onUnmounted, onBeforeUnmount,
+            onUpdated, onBeforeUpdate, onActivated, onDeactivated,
+            onErrorCaptured, onRenderTracked, onRenderTriggered,
+            
+            // Component
+            defineComponent, defineAsyncComponent, getCurrentInstance,
+            h, createVNode, cloneVNode, mergeProps, isVNode,
+            
+            // Template compilation helpers
+            openBlock, createBlock, createElementBlock, createElementVNode, createTextVNode,
+            createCommentVNode, createStaticVNode, resolveComponent, resolveDirective,
+            resolveDynamicComponent, withDirectives, withModifiers, withKeys, withCtx,
+            renderList, renderSlot, toHandlers, Fragment, Teleport, Suspense, KeepAlive,
+            
+            // Misc
+            nextTick, inject, provide, defineProps, defineEmits, defineExpose, defineOptions,
+            defineSlots, defineModel, withDefaults, useSlots, useAttrs,
+            toDisplayString, camelize, capitalize, normalizeClass, normalizeStyle, normalizeProps,
+            guardReactiveProps, createRenderer, createHydrationRenderer, queuePostFlushCb, warn,
+            effectScope, getCurrentScope, onScopeDispose, useCssVars, useId, useModel,
+            useCssModule, useTransitionState
+          } = Vue;
         `
       }
       if (id === '\0statamic-cms-external') {
