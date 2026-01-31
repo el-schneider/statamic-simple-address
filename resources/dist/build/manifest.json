@@ -12,12 +12,12 @@
     "src": "node_modules/leaflet/dist/images/marker-icon.png"
   },
   "resources/js/simple-address.js": {
-    "file": "assets/simple-address-tfuISgTA.js",
+    "file": "assets/simple-address-0lkyLay2.js",
     "name": "simple-address",
     "src": "resources/js/simple-address.js",
     "isEntry": true,
     "css": [
-      "assets/simple-address-CLu0niNO.css"
+      "assets/simple-address-Yb9gpVXN.css"
     ],
     "assets": [
       "assets/layers-BWBAp2CZ.png",
