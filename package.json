@@ -22,7 +22,8 @@
   "keywords": [],
   "author": "",
   "devDependencies": {
-    "@statamic/cms": "file:./vendor/statamic/cms/resources/dist-package",
+    "@statamic/cms": "file:../statamic-simple-address-v6/vendor/statamic/cms/resources/dist-package",
+    "@vitejs/plugin-vue": "^6.0.3",
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.5.1",
