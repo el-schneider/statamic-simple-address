@@ -8,3 +8,7 @@ yarn-error.log
 /.vscode
 hot
 .env
+
+# Pest browser plugin screenshots
+tests/Browser/Screenshots
+Tests/Browser/Screenshots

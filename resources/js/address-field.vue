@@ -14,7 +14,7 @@
         @search="onSearch"
       >
         <template #option="option">
-          <div v-text="option.label" />
+          <div data-testid="simple-address-option" v-text="option.label" />
         </template>
         <template #no-options="{ searchQuery }">
           <div class="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
@@ -52,8 +52,14 @@ const DEBOUNCE_DELAY = 300
 // Get global properties (including $axios, $toast)
 const instance = getCurrentInstance()
 const globalProperties = instance?.appContext?.config?.globalProperties ?? {}
-const http = globalProperties.$axios ?? Statamic?.$axios
-const toast = globalProperties.$toast ?? Statamic?.$toast
+
+function getHttpClient() {
+  return globalProperties.$axios ?? Statamic?.$app?.config?.globalProperties?.$axios ?? Statamic?.$axios
+}
+
+function getToastClient() {
+  return globalProperties.$toast ?? Statamic?.$toast
+}
 
 // Fieldtype setup
 const emit = defineEmits(Fieldtype.emits)
@@ -161,6 +167,8 @@ async function performAddressSearch(query) {
     language: normalizeLanguage(language),
   }
 
+  const http = getHttpClient()
+
   if (!http) {
     throw new Error('No HTTP client available')
   }
@@ -181,12 +189,14 @@ function handleSearchError(error) {
   console.error('Address search failed:', error)
 
   const message = error.response?.data?.message || __('Failed to search addresses. Please try again.')
-  toast?.error(__(message))
+  getToastClient()?.error(__(message))
 }
 
 async function onCoordinatesChanged({ lat, lon }) {
   try {
     const language = normalizeLanguage(searchConfig.value.language)
+
+    const http = getHttpClient()
 
     if (!http) {
       throw new Error('No HTTP client available')
@@ -203,16 +213,16 @@ async function onCoordinatesChanged({ lat, lon }) {
 
     if (results.length > 0) {
       update(results[0])
-      toast?.success(__('Address updated from map'))
+      getToastClient()?.success(__('Address updated from map'))
     } else {
       // No address found - keep existing data but update coordinates
       updateCoordinatesOnly(lat, lon)
-      toast?.info(__('Coordinates updated'))
+      getToastClient()?.info(__('Coordinates updated'))
     }
   } catch (error) {
     console.error('Reverse geocoding failed:', error)
     const message = error.response?.data?.message || __('Failed to lookup address. Please try again.')
-    toast?.error(__(message))
+    getToastClient()?.error(__(message))
     // Revert marker on error
     detailsPanel.value?.revertMarkerPosition()
   }
