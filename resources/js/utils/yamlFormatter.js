@@ -22,5 +22,5 @@ function styledValue(value) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  return `<span class="text-blue-600 dark:text-blue-400">${escaped}</span>`
+  return `<span class="text-primary">${escaped}</span>`
 }
