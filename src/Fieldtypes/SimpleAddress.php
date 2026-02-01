@@ -23,11 +23,11 @@ class SimpleAddress extends Fieldtype
                 'width' => 50,
             ],
             'language' => [
-                'type' => 'taggable',
+                'type' => 'text',
                 'display' => __('Language'),
-                'instructions' => __('Preferred language order for showing search results. Either use a standard RFC2616 (e.g. **en**, **de-CH**, **en-US**) accept-language string or a simple comma-separated list of language codes.'),
+                'instructions' => __('Preferred language for showing search results. Use a standard RFC2616 accept-language string (e.g. **en**, **de-CH**, **en-US**).'),
                 'width' => 50,
-                'default' => ['en'],
+                'default' => 'en',
             ],
             'exclude_fields' => [
                 'type' => 'taggable',

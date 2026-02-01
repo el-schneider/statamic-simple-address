@@ -54,6 +54,16 @@ countryCode: GB
 composer require el-schneider/statamic-simple-address
 ```
 
+### Control Panel Assets (Statamic v6)
+
+If you install/update the addon via Composer, publish the Control Panel assets so Statamic can load the Vite manifest:
+
+```bash
+php artisan vendor:publish --tag=statamic-simple-address --force
+```
+
+If you install via Statamic's addon installer, this is typically done automatically.
+
 Works immediately with Nominatim as the default provider.
 
 ### Using a Different Provider

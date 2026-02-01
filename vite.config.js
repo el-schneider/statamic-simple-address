@@ -1,13 +1,15 @@
-import vue from '@vitejs/plugin-vue2'
 import laravel from 'laravel-vite-plugin'
+import statamic from '@statamic/cms/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
-// https://vitejs.dev/config/
+
 export default defineConfig({
   plugins: [
     laravel({
-      input: ['resources/js/simple-address.js'],
+      input: ['resources/js/simple-address.js', 'resources/css/addon.css'],
       publicDirectory: 'resources/dist',
     }),
-    vue(),
+    tailwindcss(),
+    statamic(),
   ],
 })

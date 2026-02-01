@@ -1,38 +1,40 @@
 <template>
-  <div>
-    <!-- Address Select with inline details button -->
-    <div class="simple-address-select-wrapper">
-      <v-select
-        ref="select"
-        :value="value"
-        :filterable="false"
-        :options="options"
-        :placeholder="config.placeholder"
-        :components="selectComponents"
-        append-to-body
-        :no-drop="!options.length"
-        @search="onSearch"
-        @input="setSelected"
-      >
-        <template #option="{ label }">
-          <div v-text="label" />
-        </template>
-        <template #selected-option="{ label }">
-          <div v-text="label" />
-        </template>
-        <template #no-options>
-          <div class="px-4 py-2 text-sm text-gray-700 ltr:text-left rtl:text-right" v-text="noOptionsText" />
-        </template>
-      </v-select>
+  <div class="simple-address-field space-y-2">
+    <Combobox
+      v-model="selectedKey"
+      :options="options"
+      :placeholder="config.placeholder || __('Search for an address...')"
+      searchable
+      ignore-filter
+      clearable
+      @search="onSearch"
+    >
+      <template #option="option">
+        <div class="flex items-center">
+          <ui-icon name="pin" class="h-4 w-4 flex-shrink-0 text-gray-500 ltr:mr-2 rtl:ml-2" />
+          <span v-text="option.label" />
+        </div>
+      </template>
+      <template #no-options="{ searchQuery }">
+        <div class="dark:text-dark-150 px-4 py-2 text-sm text-gray-700">
+          {{ searchQuery ? __('No addresses found.') : __('Type to search for an address...') }}
+        </div>
+      </template>
+    </Combobox>
 
-      <!-- Details Toggle Button (inside select) -->
-      <button v-if="value" type="button" class="simple-address-details-btn" @click.stop="toggleDetails">
-        {{ detailsButtonText }}
+    <div v-if="value" class="flex items-center gap-2">
+      <button
+        type="button"
+        class="flex items-center gap-1 text-sm outline-none"
+        style="color: var(--color-primary)"
+        @click="showDetails = !showDetails"
+      >
+        <ui-icon name="info-square" class="h-4 w-4" />
+        {{ showDetails ? __('Hide details') : __('Show details') }}
       </button>
     </div>
 
-    <!-- Address Details Panel -->
-    <address-details-panel
+    <AddressDetailsPanel
       v-if="showDetails && value"
       ref="detailsPanel"
       :address="value"
@@ -41,239 +43,137 @@
   </div>
 </template>
 
-<script>
-import vSelect from 'vue-select'
-import debounce from './utils/debounce'
+<script setup>
+import { ref, computed, watch, getCurrentInstance } from 'vue'
+import { Fieldtype } from '@statamic/cms'
+import { Combobox } from '@statamic/cms/ui'
 import AddressDetailsPanel from './components/AddressDetailsPanel.vue'
 
-// Constants
-const DEFAULT_LANGUAGE = 'en'
-const DEFAULT_DEBOUNCE_DELAY = 300
+// Fieldtype setup
+const emit = defineEmits(Fieldtype.emits)
+const props = defineProps(Fieldtype.props)
+const { expose, update } = Fieldtype.use(emit, props)
+defineExpose(expose)
 
-export default {
-  name: 'SimpleAddressField',
+// Global properties
+const { $axios, $toast } = getCurrentInstance().appContext.config.globalProperties
 
-  components: {
-    vSelect,
-    AddressDetailsPanel,
-  },
+// State
+const options = ref([])
+const showDetails = ref(false)
+const detailsPanel = ref(null)
 
-  mixins: [Fieldtype],
+// Debounce helper
+let searchTimeout = null
+function debounce(fn, delay) {
+  return (...args) => {
+    clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => fn(...args), delay)
+  }
+}
 
-  data() {
-    return {
-      options: [],
-      debouncedSearchFunction: null,
-      showDetails: false,
+// Create address key for Combobox value tracking
+function addressKey(address) {
+  if (!address) return null
+  return JSON.stringify([address.label ?? '', address.lat ?? '', address.lon ?? ''])
+}
+
+// Current value as Combobox option
+function currentValueOption() {
+  if (!props.value) return null
+  const key = addressKey(props.value)
+  return { label: props.value.label, value: key, address: props.value }
+}
+
+// Computed
+const selectedKey = computed({
+  get: () => (props.value ? addressKey(props.value) : null),
+  set: (key) => {
+    if (!key) {
+      update(null)
+      showDetails.value = false
+      return
+    }
+    const selected = options.value.find((opt) => opt.value === key)
+    if (selected) {
+      update(selected.address)
+      showDetails.value = false
     }
   },
+})
 
-  computed: {
-    selectComponents() {
-      return {
-        Deselect: this.deselectComponent,
-        OpenIndicator: this.openIndicatorComponent,
-      }
-    },
+// Search
+const performSearch = debounce(async (query, loading) => {
+  try {
+    const response = await $axios.post('/cp/simple-address/search', {
+      query,
+      exclude_fields: props.config.exclude_fields || [],
+      countries: props.config.countries || [],
+      language: props.config.language || 'en',
+    })
 
-    deselectComponent() {
-      return {
-        render: (createElement) => createElement('span', '×'),
-      }
-    },
+    const results = (response.data.results || []).map((item) => ({
+      label: item.label,
+      value: addressKey(item),
+      address: item,
+    }))
 
-    openIndicatorComponent() {
-      return {
-        render: (createElement) =>
-          createElement('span', {
-            class: { toggle: true },
-            domProps: {
-              innerHTML: this.chevronDownIcon,
-            },
-          }),
-      }
-    },
+    // Keep current value in options so it stays selectable
+    const current = currentValueOption()
+    options.value = current && !results.some((r) => r.value === current.value) ? [current, ...results] : results
+  } catch (error) {
+    console.error('Address search failed:', error)
+    $toast?.error(error.response?.data?.message || __('Failed to search addresses.'))
+  } finally {
+    loading(false)
+  }
+}, 300)
 
-    chevronDownIcon() {
-      return `<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 0 20 20">
-        <path fill="currentColor" d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-      </svg>`
-    },
-
-    noOptionsText() {
-      return this.__('No options to choose from.')
-    },
-
-    detailsButtonText() {
-      return this.__('details')
-    },
-
-    searchConfig() {
-      const { countries, language } = this.config
-
-      return {
-        countries: countries || [],
-        language: language || DEFAULT_LANGUAGE,
-        debounceDelay: DEFAULT_DEBOUNCE_DELAY,
-      }
-    },
-
-    debouncedSearch() {
-      if (!this.debouncedSearchFunction) {
-        this.debouncedSearchFunction = debounce(this.performSearch.bind(this), this.searchConfig.debounceDelay)
-      }
-      return this.debouncedSearchFunction
-    },
-  },
-
-  watch: {
-    'searchConfig.debounceDelay'() {
-      this.debouncedSearchFunction = null
-    },
-  },
-
-  methods: {
-    setSelected(value) {
-      this.update(value)
-      // Close details panel when a new address is selected
-      this.showDetails = false
-    },
-
-    toggleDetails() {
-      this.showDetails = !this.showDetails
-    },
-
-    onSearch(search, loading) {
-      if (!search?.length) {
-        this.options = []
-        loading(false)
-        return
-      }
-
-      loading(true)
-      this.debouncedSearch(loading, search)
-    },
-
-    async performSearch(loading, search) {
-      try {
-        const response = await this.performAddressSearch(search)
-        this.options = this.processSearchResults(response.results || [])
-      } catch (error) {
-        this.handleSearchError(error)
-      } finally {
-        loading(false)
-      }
-    },
-
-    async performAddressSearch(query) {
-      const { countries, language } = this.searchConfig
-
-      const payload = {
-        query,
-        exclude_fields: this.config.exclude_fields || [],
-        countries,
-        language: Array.isArray(language) ? language.join(',') : language,
-      }
-
-      const response = await Statamic.$axios.post('/cp/simple-address/search', payload)
-      return response.data
-    },
-
-    processSearchResults(data) {
-      return data.map((item) => ({
-        label: item.label,
-        value: item,
-      }))
-    },
-
-    handleSearchError(error) {
-      console.error('Address search failed:', error)
-
-      const message = error.response?.data?.message || this.__('Failed to search addresses. Please try again.')
-      this.$toast.error(this.__(message))
-    },
-
-    async onCoordinatesChanged({ lat, lon }) {
-      try {
-        const language = Array.isArray(this.searchConfig.language)
-          ? this.searchConfig.language.join(',')
-          : this.searchConfig.language
-
-        const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
-          lat,
-          lon,
-          language: language || null,
-          exclude_fields: this.config.exclude_fields || [],
-        })
-
-        const results = response.data.results || []
-
-        if (results.length > 0) {
-          this.update(results[0])
-          this.$toast.success(this.__('Address updated from map'))
-        } else {
-          // No address found - keep existing data but update coordinates
-          // The user's position choice is always respected
-          this.updateCoordinatesOnly(lat, lon)
-          this.$toast.info(this.__('Coordinates updated'))
-        }
-      } catch (error) {
-        console.error('Reverse geocoding failed:', error)
-        const message = error.response?.data?.message || this.__('Failed to lookup address. Please try again.')
-        this.$toast.error(this.__(message))
-        // Revert marker on error
-        this.$refs.detailsPanel?.revertMarkerPosition()
-      }
-    },
-
-    updateCoordinatesOnly(lat, lon) {
-      const currentValue = this.value?.value || this.value
-      if (currentValue) {
-        this.update({
-          ...currentValue,
-          lat,
-          lon,
-        })
-      }
-    },
-  },
+function onSearch(query, loading) {
+  if (!query) {
+    const current = currentValueOption()
+    options.value = current ? [current] : []
+    return
+  }
+  loading(true)
+  performSearch(query, loading)
 }
+
+// Reverse geocoding when map marker is dragged
+async function onCoordinatesChanged({ lat, lon }) {
+  try {
+    const response = await $axios.post('/cp/simple-address/reverse', {
+      lat,
+      lon,
+      language: props.config.language || 'en',
+      exclude_fields: props.config.exclude_fields || [],
+    })
+
+    const results = response.data.results || []
+    if (results.length > 0) {
+      update(results[0])
+      $toast?.success(__('Address updated from map'))
+    } else {
+      update({ ...props.value, lat, lon })
+      $toast?.info(__('Coordinates updated'))
+    }
+  } catch (error) {
+    console.error('Reverse geocoding failed:', error)
+    $toast?.error(error.response?.data?.message || __('Failed to lookup address.'))
+    detailsPanel.value?.revertMarkerPosition()
+  }
+}
+
+// Ensure current value is always in options
+watch(
+  () => props.value,
+  (newValue) => {
+    if (!newValue) return
+    const key = addressKey(newValue)
+    if (!options.value.some((opt) => opt.value === key)) {
+      options.value = [{ label: newValue.label, value: key, address: newValue }, ...options.value]
+    }
+  },
+  { immediate: true },
+)
 </script>
-
-<style scoped>
-/* Remove webkit search cancel button */
-:deep(.vs__search::-webkit-search-cancel-button) {
-  appearance: none;
-}
-
-/* Select wrapper for positioning details button */
-.simple-address-select-wrapper {
-  position: relative;
-}
-
-/* Details button positioned inside the select */
-.simple-address-details-btn {
-  position: absolute;
-  top: 50%;
-  right: 22px; /* Space for deselect button */
-  transform: translateY(-50%);
-  z-index: 1;
-  padding: 2px 8px 1px 8px;
-  font-size: 12px;
-  color: rgb(67 169 255);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff 15%, #fff 100%);
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.simple-address-details-btn:hover {
-  color: rgb(47 149 235);
-  text-decoration: underline;
-}
-
-/* Ensure selected option doesn't overlap with details button */
-:deep(.vs__selected) {
-  padding-right: 60px;
-}
-</style>

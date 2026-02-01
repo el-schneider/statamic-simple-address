@@ -11,13 +11,22 @@
     "file": "assets/marker-icon-hN30_KVU.png",
     "src": "node_modules/leaflet/dist/images/marker-icon.png"
   },
+  "resources/css/addon.css": {
+    "file": "assets/addon-CGEe8d52.css",
+    "src": "resources/css/addon.css",
+    "isEntry": true,
+    "name": "addon",
+    "names": [
+      "addon.css"
+    ]
+  },
   "resources/js/simple-address.js": {
-    "file": "assets/simple-address-tfuISgTA.js",
+    "file": "assets/simple-address-COMvqNKZ.js",
     "name": "simple-address",
     "src": "resources/js/simple-address.js",
     "isEntry": true,
     "css": [
-      "assets/simple-address-CLu0niNO.css"
+      "assets/simple-address-8zgzVxWB.css"
     ],
     "assets": [
       "assets/layers-BWBAp2CZ.png",

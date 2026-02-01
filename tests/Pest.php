@@ -14,6 +14,28 @@
 pest()->extend(Tests\TestCase::class)
     ->in('Unit', 'Feature');
 
+pest()->extend(Tests\BrowserTestCase::class)
+    ->group('browser')
+    ->beforeEach(function () {
+        $statamicCpManifestPath = public_path('vendor/statamic/cp/build/manifest.json');
+
+        if (! file_exists($statamicCpManifestPath)) {
+            $source = dirname(__DIR__).'/vendor/statamic/cms/resources/dist/build';
+            $target = public_path('vendor/statamic/cp/build');
+
+            \Illuminate\Support\Facades\File::ensureDirectoryExists($target);
+            \Illuminate\Support\Facades\File::copyDirectory($source, $target);
+        }
+
+        \Illuminate\Support\Facades\Artisan::call('vendor:publish', [
+            '--tag' => 'statamic-simple-address',
+            '--force' => true,
+        ]);
+    })
+    ->in('Browser');
+
+pest()->browser()->timeout(10000);
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

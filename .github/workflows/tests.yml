@@ -12,8 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        php-version: [8.3]
-        node-version: [20]
+        php-version: [8.4]
+        node-version: [22]
 
     steps:
       - name: Checkout code
@@ -50,4 +50,4 @@ jobs:
         run: npm run check
 
       - name: Run Pest tests
-        run: ./vendor/bin/pest --ci
+        run: ./vendor/bin/pest --ci --exclude-group=browser

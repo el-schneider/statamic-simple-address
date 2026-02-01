@@ -17,6 +17,7 @@ class ServiceProvider extends AddonServiceProvider
     protected $vite = [
         'input' => [
             'resources/js/simple-address.js',
+            'resources/css/addon.css',
         ],
         'publicDirectory' => 'resources/dist',
     ];
@@ -24,6 +25,10 @@ class ServiceProvider extends AddonServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        $this->publishes([
+            __DIR__.'/../resources/dist/build' => public_path('vendor/statamic-simple-address/build'),
+        ], 'statamic-simple-address');
 
         $this->registerConfiguration();
         $this->registerServices();
