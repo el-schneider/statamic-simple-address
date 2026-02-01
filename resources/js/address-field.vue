@@ -11,7 +11,7 @@
     >
       <template #option="option">
         <div class="flex items-center">
-          <svg-icon name="light/location-pin" class="h-4 w-4 flex-shrink-0 text-gray-500 ltr:mr-2 rtl:ml-2" />
+          <ui-icon name="pin" class="h-4 w-4 flex-shrink-0 text-gray-500 ltr:mr-2 rtl:ml-2" />
           <span v-text="option.label" />
         </div>
       </template>
@@ -25,16 +25,11 @@
     <div v-if="value" class="flex items-center gap-2">
       <button
         type="button"
-        class="text-blue dark:text-dark-blue-100 dark:hover:text-dark-blue-150 flex items-center gap-1 text-sm outline-none hover:text-blue-700"
+        class="flex items-center gap-1 text-sm outline-none"
+        style="color: var(--color-primary)"
         @click="showDetails = !showDetails"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-          <path
-            fill-rule="evenodd"
-            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.744 15h.505a.75.75 0 000-1.5h-.462a.246.246 0 01-.24-.197l-.46-2.066A1.75 1.75 0 009.253 9H9z"
-            clip-rule="evenodd"
-          />
-        </svg>
+        <ui-icon name="info-square" class="h-4 w-4" />
         {{ showDetails ? __('Hide details') : __('Show details') }}
       </button>
     </div>
