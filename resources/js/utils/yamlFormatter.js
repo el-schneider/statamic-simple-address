@@ -1,10 +1,9 @@
 export function formatAsYaml(obj, indent = 0) {
-  const data = obj?.value || obj
-  if (!data || typeof data !== 'object') return styledValue(data)
+  if (!obj || typeof obj !== 'object') return styledValue(obj)
 
   const pad = '  '.repeat(indent)
 
-  return Object.entries(data)
+  return Object.entries(obj)
     .map(([key, value]) => {
       if (Array.isArray(value)) {
         const items = value.length ? value.map((v) => `${pad}  - ${styledValue(v)}`).join('\n') : styledValue('[]')

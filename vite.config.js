@@ -1,10 +1,15 @@
 import vue from '@vitejs/plugin-vue'
 import laravel from 'laravel-vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import * as Vue from 'vue'
 
-// Based on @statamic/cms vite-plugin/externals.js
-// Only handles Vue - @statamic/cms is resolved from the linked package
+/**
+ * Statamic externals plugin - ensures Vue imports resolve to window.Vue
+ * at runtime, preventing Vue from being bundled into addon code.
+ *
+ * Based on @statamic/cms vite-plugin/externals.js
+ */
 function statamicExternals() {
   const RESOLVED_VIRTUAL_MODULE_ID = '\0vue-external'
   const vueExports = Object.keys(Vue).filter((key) => key !== 'default' && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key))
@@ -32,16 +37,35 @@ function statamicExternals() {
       return null
     },
 
-    // The virtual module above ensures Vue imports resolve to window.Vue.
+    configResolved(resolvedConfig) {
+      resolvedConfig.build.rollupOptions.plugins = resolvedConfig.build.rollupOptions.plugins || []
+      resolvedConfig.build.rollupOptions.plugins.push({
+        name: 'statamic-externals',
+        renderChunk(code) {
+          // Handle mixed imports: import Default, { named } from 'vue'
+          code = code.replace(
+            /import\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*,\s*(\{[^}]+\})\s+from\s+['"]vue['"];?/g,
+            'const $1 = window.Vue;\nconst $2 = window.Vue;',
+          )
+
+          // Handle remaining imports (default or named only)
+          return code.replace(/import\s+(.+?)\s+from\s+['"]vue['"];?/g, 'const $1 = window.Vue;')
+        },
+      })
+    },
   }
 }
 
 export default defineConfig({
+  server: {
+    host: 'localhost',
+  },
   plugins: [
     laravel({
-      input: ['resources/js/simple-address.js'],
+      input: ['resources/js/simple-address.js', 'resources/css/addon.css'],
       publicDirectory: 'resources/dist',
     }),
+    tailwindcss(),
     statamicExternals(),
     vue(),
   ],

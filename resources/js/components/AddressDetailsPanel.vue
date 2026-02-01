@@ -4,7 +4,7 @@
       <div ref="mapContainer" class="dark:bg-dark-100 w-full bg-gray-100" style="aspect-ratio: 16 / 9" />
       <div
         v-if="mouseCoords"
-        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute top-2 right-2 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
+        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute top-2 right-2 z-10 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
       >
         {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
       </div>
@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { formatAsYaml } from '../utils/yamlFormatter'
@@ -36,14 +36,12 @@ const mapContainer = ref(null)
 const map = ref(null)
 const marker = ref(null)
 const originalPosition = ref(null)
-const dragEndTimeout = ref(null)
 const mouseCoords = ref(null)
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 
 function initializeMap() {
-  const addressData = props.address.value || props.address
-  const { lat, lon } = addressData
+  const { lat, lon } = props.address
 
   if (!lat || !lon) {
     return
@@ -96,17 +94,11 @@ function initializeMap() {
 }
 
 function onMarkerDragEnd() {
-  if (dragEndTimeout.value) {
-    clearTimeout(dragEndTimeout.value)
-  }
-
-  dragEndTimeout.value = setTimeout(() => {
-    const newLatLng = marker.value.getLatLng()
-    emit('coordinates-changed', {
-      lat: parseFloat(newLatLng.lat).toFixed(7),
-      lon: parseFloat(newLatLng.lng).toFixed(7),
-    })
-  }, 500)
+  const newLatLng = marker.value.getLatLng()
+  emit('coordinates-changed', {
+    lat: parseFloat(newLatLng.lat).toFixed(7),
+    lon: parseFloat(newLatLng.lng).toFixed(7),
+  })
 }
 
 function revertMarkerPosition() {
@@ -127,24 +119,15 @@ defineExpose({
 
 watch(
   () => props.address,
-  () => {
-    nextTick(() => {
-      initializeMap()
-    })
-  },
+  () => initializeMap(),
   { deep: true },
 )
 
 onMounted(() => {
-  nextTick(() => {
-    initializeMap()
-  })
+  initializeMap()
 })
 
 onBeforeUnmount(() => {
-  if (dragEndTimeout.value) {
-    clearTimeout(dragEndTimeout.value)
-  }
   if (marker.value) {
     marker.value.off('dragend')
   }
@@ -157,6 +140,39 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
+/* Reset Leaflet's z-indexes to reasonable values that don't conflict with Tailwind */
+.leaflet-pane {
+  z-index: auto;
+}
+
+.leaflet-tile-pane {
+  z-index: 1;
+}
+
+.leaflet-overlay-pane {
+  z-index: 2;
+}
+
+.leaflet-shadow-pane {
+  z-index: 3;
+}
+
+.leaflet-marker-pane {
+  z-index: 4;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 5;
+}
+
+.leaflet-popup-pane {
+  z-index: 6;
+}
+
+.leaflet-control {
+  z-index: 7;
+}
+
 .simple-address-marker {
   background: transparent !important;
   border: none !important;

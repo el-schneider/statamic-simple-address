@@ -17,6 +17,7 @@ class ServiceProvider extends AddonServiceProvider
     protected $vite = [
         'input' => [
             'resources/js/simple-address.js',
+            'resources/css/addon.css',
         ],
         'publicDirectory' => 'resources/dist',
     ];

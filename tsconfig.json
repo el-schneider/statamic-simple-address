@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "strict": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@statamic/cms/*": ["./node_modules/@statamic/cms/*"]
+    }
+  },
+  "include": ["resources/js/**/*", "vite.config.js"],
+  "exclude": ["node_modules", "resources/dist"]
+}
