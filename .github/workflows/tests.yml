@@ -47,10 +47,7 @@ jobs:
         run: npm ci
 
       - name: Run code quality checks
-        run: |
-          npx prettier --write resources/js/components/AddressDetailsPanel.vue || true
-          git diff resources/js/components/AddressDetailsPanel.vue || true
-          npm run check
+        run: npm run check
 
       - name: Run Pest tests
-        run: ./vendor/bin/pest --ci --exclude=tests/Browser
+        run: ./vendor/bin/pest --ci --exclude-group=browser

@@ -4,7 +4,7 @@
       <div ref="mapContainer" class="dark:bg-dark-100 w-full bg-gray-100" style="aspect-ratio: 16 / 9" />
       <div
         v-if="mouseCoords"
-        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute right-2 top-2 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
+        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute top-2 right-2 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
       >
         {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
       </div>
