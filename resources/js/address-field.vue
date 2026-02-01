@@ -138,7 +138,9 @@ function onSearch(query) {
   }
 
   if (!query?.length) {
-    options.value = []
+    // Preserve the current value's option when clearing search
+    const currentOption = getCurrentValueOption()
+    options.value = currentOption ? [currentOption] : []
     return
   }
 
@@ -148,10 +150,28 @@ function onSearch(query) {
   }, DEBOUNCE_DELAY)
 }
 
+function getCurrentValueOption() {
+  const data = normalizedValue.value
+  if (!data) return null
+
+  const key = getAddressKey(data)
+  if (!key) return null
+
+  return { label: data.label, value: key, address: data }
+}
+
 async function performSearch(query) {
   try {
     const response = await performAddressSearch(query)
-    options.value = processSearchResults(response.results || [])
+    const searchResults = processSearchResults(response.results || [])
+
+    // Preserve the current value's option so it remains selectable after search
+    const currentOption = getCurrentValueOption()
+    if (currentOption && !searchResults.some((opt) => opt.value === currentOption.value)) {
+      options.value = [currentOption, ...searchResults]
+    } else {
+      options.value = searchResults
+    }
   } catch (error) {
     handleSearchError(error)
   }
