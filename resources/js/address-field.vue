@@ -1,35 +1,46 @@
 <template>
-  <div class="simple-address-field">
-    <!-- Address Combobox with inline details button -->
-    <div class="simple-address-select-wrapper">
-      <Combobox
-        v-model="selectedKey"
-        :options="options"
-        :placeholder="config.placeholder || __('Search for an address...')"
-        :searchable="true"
-        :ignore-filter="true"
-        :clearable="true"
-        option-label="label"
-        option-value="value"
-        @search="onSearch"
-      >
-        <template #option="option">
-          <div data-testid="simple-address-option" v-text="option.label" />
-        </template>
-        <template #no-options="{ searchQuery }">
-          <div class="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
-            {{ searchQuery ? __('No addresses found.') : __('Type to search for an address...') }}
-          </div>
-        </template>
-      </Combobox>
+  <div class="space-y-2">
+    <Combobox
+      v-model="selectedKey"
+      :options="options"
+      :placeholder="config.placeholder || __('Search for an address...')"
+      :searchable="true"
+      :ignore-filter="true"
+      :clearable="true"
+      option-label="label"
+      option-value="value"
+      @search="onSearch"
+    >
+      <template #option="option">
+        <div class="flex items-center">
+          <svg-icon name="light/location-pin" class="h-4 w-4 flex-shrink-0 text-gray-500 ltr:mr-2 rtl:ml-2" />
+          <span v-text="option.label" />
+        </div>
+      </template>
+      <template #no-options="{ searchQuery }">
+        <div class="dark:text-dark-150 px-4 py-2 text-sm text-gray-700">
+          {{ searchQuery ? __('No addresses found.') : __('Type to search for an address...') }}
+        </div>
+      </template>
+    </Combobox>
 
-      <!-- Details Toggle Button -->
-      <button v-if="value" type="button" class="simple-address-details-btn" @click.stop="toggleDetails">
-        {{ __('details') }}
+    <div v-if="value" class="flex items-center gap-2">
+      <button
+        type="button"
+        class="text-blue dark:text-dark-blue-100 dark:hover:text-dark-blue-150 flex items-center gap-1 text-sm outline-none hover:text-blue-700"
+        @click="toggleDetails"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.744 15h.505a.75.75 0 000-1.5h-.462a.246.246 0 01-.24-.197l-.46-2.066A1.75 1.75 0 009.253 9H9z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        {{ showDetails ? __('Hide details') : __('Show details') }}
       </button>
     </div>
 
-    <!-- Address Details Panel -->
     <AddressDetailsPanel
       v-if="showDetails && value"
       ref="detailsPanel"
@@ -86,7 +97,6 @@ function getAddressKey(address) {
   const lat = data.lat ?? ''
   const lon = data.lon ?? ''
 
-  // Stable, human-safe key for Combobox selection
   return JSON.stringify([label, lat, lon])
 }
 
@@ -282,41 +292,3 @@ watch(
   { immediate: true, deep: true },
 )
 </script>
-
-<style scoped>
-/* Select wrapper for positioning details button */
-.simple-address-select-wrapper {
-  position: relative;
-}
-
-/* Details button positioned inside the select */
-.simple-address-details-btn {
-  position: absolute;
-  top: 50%;
-  right: 32px;
-  transform: translateY(-50%);
-  z-index: 1;
-  padding: 2px 8px 1px 8px;
-  font-size: 12px;
-  color: rgb(67 169 255);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff 15%, #fff 100%);
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.simple-address-details-btn:hover {
-  color: rgb(47 149 235);
-  text-decoration: underline;
-}
-
-/* Dark mode */
-:root.dark .simple-address-details-btn {
-  color: rgb(96 165 250);
-  background: linear-gradient(90deg, rgba(31, 41, 55, 0) 0%, rgb(31 41 55) 15%, rgb(31 41 55) 100%);
-}
-
-:root.dark .simple-address-details-btn:hover {
-  color: rgb(147 197 253);
-}
-</style>

@@ -1,26 +1,19 @@
 <template>
-  <div class="space-y-4">
-    <!-- Map Container -->
-    <div class="mt-1 flex flex-col gap-1 overflow-hidden rounded">
-      <div class="relative">
-        <div ref="mapContainer" class="simple-address-map w-full border" style="aspect-ratio: 16 / 9" />
-        <!-- Coordinates overlay -->
-        <div
-          v-if="mouseCoords"
-          class="simple-address-coords pointer-events-none absolute font-mono"
-          style="top: 8px; right: 8px; z-index: 1000; font-size: 11px; padding: 4px 8px; border-radius: 4px"
-        >
-          {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
-        </div>
+  <div class="space-y-2">
+    <div class="dark:border-dark-200 relative overflow-hidden rounded border border-gray-300">
+      <div ref="mapContainer" class="dark:bg-dark-100 w-full bg-gray-100" style="aspect-ratio: 16 / 9" />
+      <div
+        v-if="mouseCoords"
+        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute right-2 top-2 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
+      >
+        {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
       </div>
-
-      <!-- Location Data -->
-      <pre
-        class="simple-address-yaml overflow-auto rounded border p-4"
-        style="max-height: 200px; font-size: 10px"
-        v-html="formattedYaml"
-      />
     </div>
+
+    <pre
+      class="dark:bg-dark-200 dark:text-dark-100 dark:border-dark-300 max-h-48 overflow-auto rounded border border-gray-300 bg-white p-3 text-xs text-gray-900"
+      v-html="formattedYaml"
+    ></pre>
   </div>
 </template>
 
@@ -39,7 +32,6 @@ const props = defineProps({
 
 const emit = defineEmits(['coordinates-changed'])
 
-// Refs
 const mapContainer = ref(null)
 const map = ref(null)
 const marker = ref(null)
@@ -47,10 +39,8 @@ const originalPosition = ref(null)
 const dragEndTimeout = ref(null)
 const mouseCoords = ref(null)
 
-// Computed
 const formattedYaml = computed(() => formatAsYaml(props.address))
 
-// Methods
 function initializeMap() {
   const addressData = props.address.value || props.address
   const { lat, lon } = addressData
@@ -59,7 +49,6 @@ function initializeMap() {
     return
   }
 
-  // Remove existing map instance
   if (map.value) {
     map.value.remove()
   }
@@ -68,10 +57,8 @@ function initializeMap() {
     return
   }
 
-  // Initialize map
   map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
 
-  // Add CartoDB Positron tiles (light grey style)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -79,7 +66,6 @@ function initializeMap() {
     maxZoom: 20,
   }).addTo(map.value)
 
-  // Add draggable marker with custom styling
   const latNum = parseFloat(lat)
   const lonNum = parseFloat(lon)
 
@@ -93,13 +79,9 @@ function initializeMap() {
     }),
   }).addTo(map.value)
 
-  // Store original position for reverting on error
   originalPosition.value = [latNum, lonNum]
-
-  // Add drag event listener
   marker.value.on('dragend', onMarkerDragEnd)
 
-  // Track mouse coordinates
   map.value.on('mousemove', (e) => {
     mouseCoords.value = {
       lat: e.latlng.lat.toFixed(5),
@@ -110,17 +92,14 @@ function initializeMap() {
     mouseCoords.value = null
   })
 
-  // Invalidate size to ensure proper rendering
   map.value.invalidateSize()
 }
 
 function onMarkerDragEnd() {
-  // Cancel previous pending drag
   if (dragEndTimeout.value) {
     clearTimeout(dragEndTimeout.value)
   }
 
-  // Debounce: wait 500ms after drag stops before emitting
   dragEndTimeout.value = setTimeout(() => {
     const newLatLng = marker.value.getLatLng()
     emit('coordinates-changed', {
@@ -142,12 +121,10 @@ function formatCoord(value, type) {
   return `${Math.abs(num).toFixed(4)}° ${dir}`
 }
 
-// Expose methods for parent component
 defineExpose({
   revertMarkerPosition,
 })
 
-// Watchers
 watch(
   () => props.address,
   () => {
@@ -158,7 +135,6 @@ watch(
   { deep: true },
 )
 
-// Lifecycle
 onMounted(() => {
   nextTick(() => {
     initializeMap()
@@ -180,55 +156,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
-pre {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  line-height: 1.5;
-}
-
-/* Light mode styles */
-.simple-address-map {
-  background-color: #f3f4f6;
-}
-
-.simple-address-coords {
-  background: rgba(255, 255, 255, 0.9);
-  color: #374151;
-}
-
-.simple-address-yaml {
-  background-color: white;
-  border-color: #e5e7eb;
-  color: #374151;
-}
-
-.simple-address-yaml :deep(.yaml-value) {
-  color: rgb(67 169 255);
-}
-
-/* Dark mode styles */
-:root.dark .simple-address-map {
-  background-color: #1f2937;
-}
-
-:root.dark .simple-address-coords {
-  background: rgba(31, 41, 55, 0.9);
-  color: #d1d5db;
-}
-
-:root.dark .simple-address-yaml {
-  background-color: #1f2937;
-  border-color: #374151;
-  color: #d1d5db;
-}
-
-:root.dark .simple-address-yaml :deep(.yaml-value) {
-  color: rgb(96 165 250);
-}
-</style>
-
 <style>
-/* Marker styles (unscoped for Leaflet DOM elements) */
 .simple-address-marker {
   background: transparent !important;
   border: none !important;
