@@ -1,4 +1,6 @@
-@import 'tailwindcss';
+@layer addon-theme, addon-utilities;
+@import 'tailwindcss/theme.css' layer(addon-theme);
+@import 'tailwindcss/utilities.css' layer(addon-utilities);
 @import '@statamic/cms/ui.css';
 
-/* @custom-variant dark (&:where(.dark, .dark *)); */
+@custom-variant dark (&:where(.dark, .dark *));
