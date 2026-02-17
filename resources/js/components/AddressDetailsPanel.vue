@@ -1,17 +1,13 @@
 <template>
-  <div class="space-y-2">
-    <div class="dark:border-dark-200 relative overflow-hidden rounded border border-gray-300">
-      <div ref="mapContainer" class="dark:bg-dark-100 w-full bg-gray-100" style="aspect-ratio: 16 / 9" />
-      <div
-        v-if="mouseCoords"
-        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute top-2 right-2 z-10 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
-      >
-        {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
+  <ui-card inset flat class="overflow-hidden">
+    <div class="relative">
+      <div ref="mapContainer" class="aspect-video" />
+      <div v-if="mouseCoords" class="pointer-events-none absolute top-3 right-3 z-10 font-mono">
+        <ui-badge> {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }} </ui-badge>
       </div>
     </div>
-
-  </div>
     <pre class="max-h-48 overflow-auto p-4 text-xs sm:p-4.5 [&>span]:text-gray-500" v-html="formattedYaml" />
+  </ui-card>
 </template>
 
 <script setup>
