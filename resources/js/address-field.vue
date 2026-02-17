@@ -17,7 +17,7 @@
       </template>
       <template #no-options="{ searchQuery }">
         <div class="dark:text-dark-150 px-4 py-2 text-sm text-gray-700">
-          {{ searchQuery ? __('No addresses found.') : __('Type to search for an address...') }}
+          {{ searchQuery ? `${__('No results')}.` : __('Start typing to search.') }}
         </div>
       </template>
     </Combobox>
@@ -30,7 +30,7 @@
         @click="showDetails = !showDetails"
       >
         <ui-icon name="info-square" class="h-4 w-4" />
-        {{ showDetails ? __('Hide details') : __('Show details') }}
+        {{ showDetails ? __('Close') : __('Details') }}
       </button>
     </div>
 
