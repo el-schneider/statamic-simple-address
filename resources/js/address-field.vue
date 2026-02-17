@@ -3,7 +3,7 @@
     <Combobox
       v-model="selectedKey"
       :options="options"
-      :placeholder="config.placeholder || __('Search for an address...')"
+      :placeholder="config.placeholder || __('Search for an address or place...')"
       searchable
       ignore-filter
       clearable
@@ -11,27 +11,25 @@
     >
       <template #option="option">
         <div class="flex items-center">
-          <ui-icon name="pin" class="h-4 w-4 flex-shrink-0 text-gray-500 ltr:mr-2 rtl:ml-2" />
           <span v-text="option.label" />
         </div>
       </template>
       <template #no-options="{ searchQuery }">
-        <div class="dark:text-dark-150 px-4 py-2 text-sm text-gray-700">
-          {{ searchQuery ? __('No addresses found.') : __('Type to search for an address...') }}
+        <div class="dark:text-dark-150 text-sm text-gray-700">
+          {{ searchQuery ? `${__('No results')}.` : __('Start typing to search.') }}
         </div>
       </template>
     </Combobox>
 
     <div v-if="value" class="flex items-center gap-2">
-      <button
-        type="button"
-        class="flex items-center gap-1 text-sm outline-none"
-        style="color: var(--color-primary)"
+      <ui-button
+        size="sm"
+        variant="subtle"
+        :icon="showDetails ? 'x-square' : 'info-square'"
         @click="showDetails = !showDetails"
       >
-        <ui-icon name="info-square" class="h-4 w-4" />
         {{ showDetails ? __('Hide details') : __('Show details') }}
-      </button>
+      </ui-button>
     </div>
 
     <AddressDetailsPanel

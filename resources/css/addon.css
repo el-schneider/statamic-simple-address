@@ -4,3 +4,29 @@
 @import '@statamic/cms/ui.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+.simple-address-field {
+  .leaflet-container {
+    @apply bg-white dark:bg-black;
+  }
+
+  .leaflet-touch .leaflet-bar {
+    @apply shadow-ui-md border border-gray-300 dark:border-gray-700/80;
+  }
+
+  .leaflet-bar a {
+    @apply border-gray-300 bg-linear-to-b from-white to-gray-50 text-gray-900 hover:bg-gray-50 hover:to-gray-100;
+    @apply dark:from-gray-850 dark:hover:to-gray-850 dark:border-gray-700/80 dark:to-gray-900 dark:text-gray-300;
+  }
+
+  .leaflet-control-attribution {
+    @apply text-gray-600;
+    @apply dark:bg-gray-900/80! dark:text-gray-400;
+    a {
+      color: inherit;
+    }
+    svg {
+      @apply hidden!;
+    }
+  }
+}
