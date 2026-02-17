@@ -10,11 +10,8 @@
       </div>
     </div>
 
-    <pre
-      class="dark:bg-dark-200 dark:text-dark-100 dark:border-dark-300 max-h-48 overflow-auto rounded border border-gray-300 bg-white p-3 text-xs text-gray-900"
-      v-html="formattedYaml"
-    ></pre>
   </div>
+    <pre class="max-h-48 overflow-auto p-4 text-xs sm:p-4.5 [&>span]:text-gray-500" v-html="formattedYaml" />
 </template>
 
 <script setup>
