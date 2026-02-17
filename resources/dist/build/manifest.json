@@ -12,7 +12,7 @@
     "src": "node_modules/leaflet/dist/images/marker-icon.png"
   },
   "resources/css/addon.css": {
-    "file": "assets/addon-CGEe8d52.css",
+    "file": "assets/addon-CPSx1FUX.css",
     "src": "resources/css/addon.css",
     "isEntry": true,
     "name": "addon",
@@ -21,7 +21,7 @@
     ]
   },
   "resources/js/simple-address.js": {
-    "file": "assets/simple-address-COMvqNKZ.js",
+    "file": "assets/simple-address-C2kJuFlc.js",
     "name": "simple-address",
     "src": "resources/js/simple-address.js",
     "isEntry": true,
