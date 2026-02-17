@@ -33,7 +33,6 @@ const mouseCoords = ref(null)
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 const colorMode = computed(() => Statamic.$colorMode.mode.value)
-const mapStyle = computed(() => (colorMode.value === 'dark' ? 'dark_all' : 'light_all'))
 
 function initializeMap() {
   const { lat, lon } = props.address
@@ -52,15 +51,10 @@ function initializeMap() {
 
   map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
 
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle.value}/{z}/{x}/{y}{r}.png`, {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20,
-  }).addTo(map.value)
-
   map.value.zoomControl.remove()
   L.control.zoom({ position: 'bottomright' }).addTo(map.value)
+
+  createTileLayer(map.value)
 
   const latNum = parseFloat(lat)
   const lonNum = parseFloat(lon)
@@ -111,6 +105,23 @@ function formatCoord(value, type) {
   return `${Math.abs(num).toFixed(4)}° ${dir}`
 }
 
+function clearTileLayers(map) {
+  map?.eachLayer((layer) => {
+    if (layer instanceof L.TileLayer) layer.remove()
+  })
+}
+
+function createTileLayer(map) {
+  const style = colorMode.value === 'dark' ? 'dark_all' : 'light_all'
+
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
+  }).addTo(map)
+}
+
 defineExpose({
   revertMarkerPosition,
 })
@@ -123,7 +134,12 @@ watch(
 
 watch(
   () => colorMode.value,
-  () => initializeMap(),
+  () => {
+    if (map.value) {
+      clearTileLayers(map.value)
+      createTileLayer(map.value)
+    }
+  },
 )
 
 onMounted(() => {
