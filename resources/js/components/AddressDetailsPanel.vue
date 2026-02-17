@@ -66,6 +66,9 @@ function initializeMap() {
     maxZoom: 20,
   }).addTo(map.value)
 
+  map.value.zoomControl.remove()
+  L.control.zoom({ position: 'bottomright' }).addTo(map.value)
+
   const latNum = parseFloat(lat)
   const lonNum = parseFloat(lon)
 
