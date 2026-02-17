@@ -23,15 +23,14 @@
     </Combobox>
 
     <div v-if="value" class="flex items-center gap-2">
-      <button
-        type="button"
-        class="flex items-center gap-1 text-sm outline-none"
-        style="color: var(--color-primary)"
+      <ui-button
+        size="sm"
+        variant="subtle"
+        :icon="showDetails ? 'x-square' : 'info-square'"
         @click="showDetails = !showDetails"
       >
-        <ui-icon name="info-square" class="h-4 w-4" />
-        {{ showDetails ? __('Close') : __('Details') }}
-      </button>
+        {{ showDetails ? __('Hide details') : __('Show details') }}
+      </ui-button>
     </div>
 
     <AddressDetailsPanel
