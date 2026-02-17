@@ -7,20 +7,23 @@ export function formatAsYaml(obj, indent = 0) {
     .map(([key, value]) => {
       if (Array.isArray(value)) {
         const items = value.length ? value.map((v) => `${pad}  - ${styledValue(v)}`).join('\n') : styledValue('[]')
-        return `${pad}${key}:\n${items}`
+        return `${pad}${styledKey(key)}\n${items}`
       }
       if (value && typeof value === 'object') {
-        return `${pad}${key}:\n${formatAsYaml(value, indent + 1)}`
+        return `${pad}${styledKey(key)}\n${formatAsYaml(value, indent + 1)}`
       }
-      return `${pad}${key}: ${styledValue(value)}`
+      return `${pad}${styledKey(key)} ${styledValue(value)}`
     })
     .join('\n')
 }
 
+function styledKey(key) {
+  return `<span>${key}:</span>`
+}
+
 function styledValue(value) {
-  const escaped = String(value ?? '~')
+  return String(value ?? '~')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  return `<span class="text-primary">${escaped}</span>`
 }

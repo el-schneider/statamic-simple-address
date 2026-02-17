@@ -1,20 +1,13 @@
 <template>
-  <div class="space-y-2">
-    <div class="dark:border-dark-200 relative overflow-hidden rounded border border-gray-300">
-      <div ref="mapContainer" class="dark:bg-dark-100 w-full bg-gray-100" style="aspect-ratio: 16 / 9" />
-      <div
-        v-if="mouseCoords"
-        class="text-2xs dark:bg-dark-100/90 dark:text-dark-150 pointer-events-none absolute top-2 right-2 z-10 rounded bg-white/90 px-2 py-1 font-mono text-gray-700"
-      >
-        {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }}
+  <ui-card inset flat class="overflow-hidden">
+    <div class="relative">
+      <div ref="mapContainer" class="aspect-video" />
+      <div v-if="mouseCoords" class="pointer-events-none absolute top-3 right-3 z-10 font-mono">
+        <ui-badge> {{ formatCoord(mouseCoords.lat, 'lat') }}, {{ formatCoord(mouseCoords.lng, 'lng') }} </ui-badge>
       </div>
     </div>
-
-    <pre
-      class="dark:bg-dark-200 dark:text-dark-100 dark:border-dark-300 max-h-48 overflow-auto rounded border border-gray-300 bg-white p-3 text-xs text-gray-900"
-      v-html="formattedYaml"
-    ></pre>
-  </div>
+    <pre class="max-h-48 overflow-auto p-4 text-xs sm:p-4.5 [&>span]:text-gray-500" v-html="formattedYaml" />
+  </ui-card>
 </template>
 
 <script setup>
@@ -39,6 +32,7 @@ const originalPosition = ref(null)
 const mouseCoords = ref(null)
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
+const colorMode = computed(() => Statamic.$colorMode.mode.value)
 
 function initializeMap() {
   const { lat, lon } = props.address
@@ -57,12 +51,10 @@ function initializeMap() {
 
   map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20,
-  }).addTo(map.value)
+  map.value.zoomControl.remove()
+  L.control.zoom({ position: 'bottomright' }).addTo(map.value)
+
+  createTileLayer(map.value)
 
   const latNum = parseFloat(lat)
   const lonNum = parseFloat(lon)
@@ -113,6 +105,23 @@ function formatCoord(value, type) {
   return `${Math.abs(num).toFixed(4)}° ${dir}`
 }
 
+function clearTileLayers(map) {
+  map?.eachLayer((layer) => {
+    if (layer instanceof L.TileLayer) layer.remove()
+  })
+}
+
+function createTileLayer(map) {
+  const style = colorMode.value === 'dark' ? 'dark_all' : 'light_all'
+
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
+  }).addTo(map)
+}
+
 defineExpose({
   revertMarkerPosition,
 })
@@ -121,6 +130,16 @@ watch(
   () => props.address,
   () => initializeMap(),
   { deep: true },
+)
+
+watch(
+  () => colorMode.value,
+  () => {
+    if (map.value) {
+      clearTileLayers(map.value)
+      createTileLayer(map.value)
+    }
+  },
 )
 
 onMounted(() => {
