@@ -14,7 +14,7 @@ class SimpleAddress extends Fieldtype
             'placeholder' => [
                 'type' => 'text',
                 'display' => __('Placeholder'),
-                'default' => __('Start typing …'),
+                'placeholder' => __('Search for an address or place...'),
             ],
             'countries' => [
                 'type' => 'taggable',

@@ -3,7 +3,7 @@
     <Combobox
       v-model="selectedKey"
       :options="options"
-      :placeholder="config.placeholder || __('Search for an address...')"
+      :placeholder="config.placeholder || __('Search for an address or place...')"
       searchable
       ignore-filter
       clearable
