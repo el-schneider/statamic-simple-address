@@ -39,6 +39,8 @@ const originalPosition = ref(null)
 const mouseCoords = ref(null)
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
+const colorMode = computed(() => Statamic.$colorMode.mode.value)
+const mapStyle = computed(() => (colorMode.value === 'dark' ? 'dark_all' : 'light_all'))
 
 function initializeMap() {
   const { lat, lon } = props.address
@@ -57,7 +59,7 @@ function initializeMap() {
 
   map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${mapStyle.value}/{z}/{x}/{y}{r}.png`, {
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
@@ -121,6 +123,11 @@ watch(
   () => props.address,
   () => initializeMap(),
   { deep: true },
+)
+
+watch(
+  () => colorMode.value,
+  () => initializeMap(),
 )
 
 onMounted(() => {
