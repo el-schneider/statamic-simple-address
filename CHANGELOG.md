@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.1.0 - 2026-02-17
+
+### What's new
+
+- **Dark mode map tiles** — Map now reactively switches between CARTO light and dark tile layers based on Statamic's color mode
+- **Native UI components** — Details panel uses `<ui-card>` and `<ui-badge>`, toggle button uses `<ui-button>` for consistent CP styling
+- **Improved dark mode** — Leaflet controls (zoom, attribution) properly themed for dark mode
+
+### What's changed
+
+- Zoom control moved to bottom-right
+- Placeholder text updated to "Search for an address or place..."
+- No-results text now uses existing Statamic translations ("No results" / "Start typing to search")
+- YAML detail view uses simplified styling with inherited theme colors
+- CI: Added Composer install step for asset builds
+
+### Contributors
+
+Thanks to @daun for the original PRs (#7, #8, #9) that this release is based on.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.0.0...v2.1.0
+
 ## v2.0.0 - 2026-02-01
 
 ### What's new
