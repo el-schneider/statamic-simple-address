@@ -21,7 +21,7 @@ class GeocodingController
     {
         $query = $request->input('query');
         $countries = $request->input('countries', []);
-        $language = $request->input('language');
+        $language = $this->normalizeLanguage($request->input('language'));
 
         try {
             $geocodeQuery = GeocodeQuery::create($query);
@@ -48,7 +48,7 @@ class GeocodingController
     {
         $lat = $request->input('lat');
         $lon = $request->input('lon');
-        $language = $request->input('language');
+        $language = $this->normalizeLanguage($request->input('language'));
 
         try {
             $coordinates = new Coordinates((float) $lat, (float) $lon);
@@ -66,6 +66,22 @@ class GeocodingController
         } catch (\Exception $e) {
             return $this->handleGeocodingError($e);
         }
+    }
+
+    /**
+     * Normalize the incoming language value to an RFC2616-style string.
+     *
+     * The `language` fieldtype config is a taggable field, so the frontend
+     * can POST an array (e.g. ['en', 'de']). Geocoder's withLocale() is
+     * strictly typed as string, so we collapse arrays to a comma-separated list.
+     */
+    private function normalizeLanguage(mixed $language): ?string
+    {
+        if (is_array($language)) {
+            return implode(',', $language) ?: null;
+        }
+
+        return $language;
     }
 
     private function handleGeocodingError(\Exception $e): JsonResponse
