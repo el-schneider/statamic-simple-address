@@ -54,7 +54,7 @@ const { expose, update } = Fieldtype.use(emit, props)
 defineExpose(expose)
 
 // Global properties
-const { $axios, $toast } = getCurrentInstance().appContext.config.globalProperties
+const { $axios, $toast, cp_url } = getCurrentInstance().appContext.config.globalProperties
 
 // State
 const options = ref([])
@@ -103,7 +103,7 @@ const selectedKey = computed({
 // Search
 const performSearch = debounce(async (query, loading) => {
   try {
-    const response = await $axios.post('/cp/simple-address/search', {
+    const response = await $axios.post(cp_url('simple-address/search'), {
       query,
       exclude_fields: props.config.exclude_fields || [],
       countries: props.config.countries || [],
@@ -140,7 +140,7 @@ function onSearch(query, loading) {
 // Reverse geocoding when map marker is dragged
 async function onCoordinatesChanged({ lat, lon }) {
   try {
-    const response = await $axios.post('/cp/simple-address/reverse', {
+    const response = await $axios.post(cp_url('simple-address/reverse'), {
       lat,
       lon,
       language: props.config.language || 'en',
