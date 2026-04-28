@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.1.1 - 2026-04-28
+
+### What's fixed
+
+- **Support customized CP routes** — Frontend geocoding endpoints now use Statamic's `cp_url()` helper instead of hardcoded `/cp/...` URLs.
+- **Fix language locale TypeError** — Geocoding controller now normalizes taggable `language` config arrays to comma-separated strings before calling `withLocale()`.
+
+### Maintenance
+
+- **CI/automation alignment** — Dependabot config, CI workflow split, and Husky/pre-commit checks were aligned with current repository maintenance standards.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.1.0...v2.1.1
+
 ## v0.2.3 - 2026-04-28
 
 ### What's fixed
