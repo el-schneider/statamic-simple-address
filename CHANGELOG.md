@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.3 - 2026-04-28
+
+### What's fixed
+
+- Fix control panel route handling for simple-address search/reverse endpoints when CP route is customized (#15)
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v0.2.2...v0.2.3
+
 ## v2.1.0 - 2026-02-17
 
 ### What's new
