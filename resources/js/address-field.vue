@@ -175,7 +175,7 @@ export default {
         language: Array.isArray(language) ? language.join(',') : language,
       }
 
-      const response = await Statamic.$axios.post('/cp/simple-address/search', payload)
+      const response = await Statamic.$axios.post(this.cp_url('simple-address/search'), payload)
       return response.data
     },
 
@@ -199,7 +199,7 @@ export default {
           ? this.searchConfig.language.join(',')
           : this.searchConfig.language
 
-        const response = await Statamic.$axios.post('/cp/simple-address/reverse', {
+        const response = await Statamic.$axios.post(this.cp_url('simple-address/reverse'), {
           lat,
           lon,
           language: language || null,
