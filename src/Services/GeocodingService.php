@@ -23,7 +23,7 @@ class GeocodingService
         if (config('simple-address.cache.enabled')) {
             $provider = new ProviderCache(
                 $provider,
-                app('cache')->store(config('simple-address.cache.store')),
+                new SerializableGeocoderCache(app('cache')->store(config('simple-address.cache.store'))),
                 config('simple-address.cache.duration')
             );
         }
