@@ -4,6 +4,7 @@ use ElSchneider\StatamicSimpleAddress\ServiceProvider;
 use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use ElSchneider\StatamicSimpleAddress\Services\SerializableGeocoderCache;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\Cache\ProviderCache;
 use Geocoder\Query\GeocodeQuery;
 use Tests\Stubs\GoogleLikeProvider;
 use Tests\Stubs\RestrictedUnserializeCache;
@@ -47,7 +48,7 @@ test('that the geocoding service is bound as singleton', function () {
 test('geocoder cache stores scalar arrays that survive restricted unserialization', function () {
     GoogleLikeProvider::$calls = 0;
     $cache = new RestrictedUnserializeCache;
-    $provider = new SerializableGeocoderCache(new GoogleLikeProvider, $cache, 3600);
+    $provider = new ProviderCache(new GoogleLikeProvider, new SerializableGeocoderCache($cache), 3600);
     $query = GeocodeQuery::create('Holzmarkt 1, Tübingen');
 
     $first = $provider->geocodeQuery($query);

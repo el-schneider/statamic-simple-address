@@ -2,70 +2,83 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
+use DateInterval;
 use Geocoder\Collection;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
-use Geocoder\Provider\Provider;
-use Geocoder\Query\GeocodeQuery;
-use Geocoder\Query\ReverseQuery;
 use Psr\SimpleCache\CacheInterface;
 
-class SerializableGeocoderCache implements Provider
+class SerializableGeocoderCache implements CacheInterface
 {
     private const CACHE_VERSION = 1;
 
     public function __construct(
-        private Provider $provider,
         private CacheInterface $cache,
-        private ?int $lifetime = null,
-        private bool $separateCache = false,
     ) {}
 
-    public function geocodeQuery(GeocodeQuery $query): Collection
+    public function get(string $key, mixed $default = null): mixed
     {
-        return $this->remember($this->cacheKey($query), fn () => $this->provider->geocodeQuery($query));
+        return $this->restore($this->cache->get($key)) ?? $default;
     }
 
-    public function reverseQuery(ReverseQuery $query): Collection
+    public function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
-        return $this->remember($this->cacheKey($query), fn () => $this->provider->reverseQuery($query));
+        return $this->cache->set($key, $this->normalize($value), $ttl);
     }
 
-    public function getName(): string
+    public function delete(string $key): bool
     {
-        return sprintf('%s (cache)', $this->provider->getName());
+        return $this->cache->delete($key);
     }
 
-    public function __call(string $method, array $args): mixed
+    public function clear(): bool
     {
-        return call_user_func_array([$this->provider, $method], $args);
+        return $this->cache->clear();
     }
 
-    private function remember(string $key, callable $callback): Collection
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        $cached = $this->cache->get($key);
+        foreach ($keys as $key) {
+            yield $key => $this->get($key, $default);
+        }
+    }
 
-        if ($cached = $this->restore($cached)) {
-            return $cached;
+    public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
+    {
+        foreach ($values as $key => $value) {
+            if (! $this->set($key, $value, $ttl)) {
+                return false;
+            }
         }
 
-        $result = $callback();
-
-        $this->cache->set($key, $this->normalize($result), $this->lifetime);
-
-        return $result;
+        return true;
     }
 
-    private function cacheKey(GeocodeQuery|ReverseQuery $query): string
+    public function deleteMultiple(iterable $keys): bool
     {
-        return 'ssa-geocoder-v'.self::CACHE_VERSION.sha1((string) $query.($this->separateCache ? $this->provider->getName() : ''));
+        foreach ($keys as $key) {
+            if (! $this->delete($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    private function normalize(Collection $collection): array
+    public function has(string $key): bool
     {
+        return $this->cache->has($key);
+    }
+
+    private function normalize(mixed $value): mixed
+    {
+        if (! $value instanceof Collection) {
+            return $value;
+        }
+
         return [
             'version' => self::CACHE_VERSION,
-            'locations' => array_map(fn ($location) => $location->toArray(), $collection->all()),
+            'locations' => array_map(fn ($location) => $location->toArray(), $value->all()),
         ];
     }
 
