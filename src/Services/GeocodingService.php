@@ -2,7 +2,6 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
-use Geocoder\Provider\Cache\ProviderCache;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
@@ -21,7 +20,7 @@ class GeocodingService
 
         // Wrap with caching if enabled
         if (config('simple-address.cache.enabled')) {
-            $provider = new ProviderCache(
+            $provider = new SerializableGeocoderCache(
                 $provider,
                 app('cache')->store(config('simple-address.cache.store')),
                 config('simple-address.cache.duration')
