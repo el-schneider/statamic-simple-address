@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.1.2 - 2026-06-05
+
+### What's fixed
+
+- **Laravel 13 cache compatibility** — Geocoder results are now cached as plain serializable arrays and rehydrated on read, avoiding failures when Laravel 13's `cache.serializable_classes=false` security default blocks cached provider result objects from being unserialized.
+- **Non-Nominatim provider cache safety** — The cache fix was validated with Google Maps-style geocoder results so providers with custom result objects no longer break cached autocomplete responses.
+
+Fixes https://github.com/el-schneider/statamic-simple-address/issues/19.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.1.1...v2.1.2
+
 ## v2.1.1 - 2026-04-28
 
 ### What's fixed
