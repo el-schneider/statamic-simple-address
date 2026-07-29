@@ -21,6 +21,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  zoom: {
+    type: [Number, String],
+    default: 13,
+  },
 })
 
 const emit = defineEmits(['coordinates-changed'])
@@ -30,6 +34,10 @@ const map = ref(null)
 const marker = ref(null)
 const originalPosition = ref(null)
 const mouseCoords = ref(null)
+
+// Falls back to 13 for null, empty or non-numeric config values -- Vue's prop
+// default only covers undefined, and Statamic hands over an unset integer as null.
+const zoomLevel = computed(() => Number(props.zoom) || 13)
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 const colorMode = computed(() => Statamic.$colorMode.mode.value)
@@ -49,7 +57,7 @@ function initializeMap() {
     return
   }
 
-  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
+  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], zoomLevel.value)
 
   map.value.zoomControl.remove()
   L.control.zoom({ position: 'bottomright' }).addTo(map.value)

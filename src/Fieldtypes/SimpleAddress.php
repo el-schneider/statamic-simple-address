@@ -34,6 +34,13 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Exclude Fields'),
                 'instructions' => __('Fields to exclude from the address result. (e.g. **bounds**, **adminLevels**, **providedBy**)'),
             ],
+            'zoom' => [
+                'type' => 'integer',
+                'display' => __('Map Zoom'),
+                'instructions' => __('Initial zoom level of the map. Leaflet scale, roughly **10** for a city, **13** for a district, **17** for a single building.'),
+                'width' => 50,
+                'default' => 13,
+            ],
         ];
     }
 

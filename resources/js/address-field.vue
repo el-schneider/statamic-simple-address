@@ -36,6 +36,7 @@
       v-if="showDetails && value"
       ref="detailsPanel"
       :address="value"
+      :zoom="config.zoom"
       @coordinates-changed="onCoordinatesChanged"
     />
   </div>
