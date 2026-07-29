@@ -37,7 +37,14 @@ const mouseCoords = ref(null)
 
 // Falls back to 13 for null, empty or non-numeric config values -- Vue's prop
 // default only covers undefined, and Statamic hands over an unset integer as null.
-const zoomLevel = computed(() => Number(props.zoom) || 13)
+// Zoom 0 is a valid Leaflet level (the whole world), so it must survive the check.
+const zoomLevel = computed(() => {
+  if (props.zoom === null || props.zoom === '') return 13
+
+  const zoom = Number(props.zoom)
+
+  return Number.isFinite(zoom) ? zoom : 13
+})
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 const colorMode = computed(() => Statamic.$colorMode.mode.value)

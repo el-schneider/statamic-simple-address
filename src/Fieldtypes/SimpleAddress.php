@@ -37,9 +37,10 @@ class SimpleAddress extends Fieldtype
             'zoom' => [
                 'type' => 'integer',
                 'display' => __('Map Zoom'),
-                'instructions' => __('Initial zoom level of the map. Leaflet scale, roughly **10** for a city, **13** for a district, **17** for a single building.'),
+                'instructions' => __('Initial zoom level of the map. Leaflet scale from **0** (the whole world) to **20**, roughly **10** for a city, **13** for a district, **17** for a single building.'),
                 'width' => 50,
                 'default' => 13,
+                'validate' => ['integer', 'min:0', 'max:20'],
             ],
         ];
     }

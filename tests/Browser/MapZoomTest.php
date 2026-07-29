@@ -94,3 +94,12 @@ it('opens the map at the configured zoom', function () {
         ->click('internal:text="Show details"i')
         ->assertScript(readRenderedZoom(), 9);
 });
+
+it('treats a configured zoom of 0 as the world view rather than a missing value', function () {
+    $editUrl = seedZoomEntry($this, 'zerozoom', ['zoom' => 0]);
+
+    visit($editUrl)
+        ->assertPresent('.simple-address-field')
+        ->click('internal:text="Show details"i')
+        ->assertScript(readRenderedZoom(), 0);
+});
