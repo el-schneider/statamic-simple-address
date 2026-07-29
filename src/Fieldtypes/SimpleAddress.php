@@ -34,6 +34,12 @@ class SimpleAddress extends Fieldtype
                 'display' => __('Exclude Fields'),
                 'instructions' => __('Fields to exclude from the address result. (e.g. **bounds**, **adminLevels**, **providedBy**)'),
             ],
+            'expand_details' => [
+                'type' => 'toggle',
+                'display' => __('Expand details by default'),
+                'instructions' => __('Show the map and address details right away, instead of behind the "Show details" button.'),
+                'default' => false,
+            ],
         ];
     }
 

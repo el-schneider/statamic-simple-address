@@ -58,7 +58,8 @@ const { $axios, $toast, cp_url } = getCurrentInstance().appContext.config.global
 
 // State
 const options = ref([])
-const showDetails = ref(false)
+const expandDetails = computed(() => props.config.expand_details ?? false)
+const showDetails = ref(expandDetails.value)
 const detailsPanel = ref(null)
 
 // Debounce helper
@@ -89,13 +90,13 @@ const selectedKey = computed({
   set: (key) => {
     if (!key) {
       update(null)
-      showDetails.value = false
+      showDetails.value = expandDetails.value
       return
     }
     const selected = options.value.find((opt) => opt.value === key)
     if (selected) {
       update(selected.address)
-      showDetails.value = false
+      showDetails.value = expandDetails.value
     }
   },
 })
