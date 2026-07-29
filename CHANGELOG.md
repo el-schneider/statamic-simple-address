@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.0 - 2026-07-29
+
+### What's new
+
+- **Expand details by default** — a new fieldtype toggle that shows the map and address details as soon as an address is selected, instead of behind the *Show details* button. Defaults to off, so existing fields are unchanged.
+- **Map Zoom** — a new fieldtype option for the initial zoom level of the details map, on the Leaflet scale from `0` (the whole world) to `20`. Defaults to `13`, the value that was previously hard-coded.
+
+Both options were contributed by @eugene-karuna in #21 and #22, and landed together in #23.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.1.2...v2.2.0
+
 ## v2.1.2 - 2026-06-05
 
 ### What's fixed
