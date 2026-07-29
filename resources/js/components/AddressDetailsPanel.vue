@@ -21,6 +21,12 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // null, not 13: an unset Statamic integer arrives as null, so the fallback
+  // has to live in zoomLevel anyway. Keeping it in one place.
+  zoom: {
+    type: [Number, String],
+    default: null,
+  },
 })
 
 const emit = defineEmits(['coordinates-changed'])
@@ -30,6 +36,13 @@ const map = ref(null)
 const marker = ref(null)
 const originalPosition = ref(null)
 const mouseCoords = ref(null)
+
+// parseFloat, not Number: Number(null) is 0 and zoom 0 is a valid Leaflet level.
+const zoomLevel = computed(() => {
+  const zoom = parseFloat(props.zoom)
+
+  return Number.isNaN(zoom) ? 13 : zoom
+})
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 const colorMode = computed(() => Statamic.$colorMode.mode.value)
@@ -49,7 +62,7 @@ function initializeMap() {
     return
   }
 
-  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
+  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], zoomLevel.value)
 
   map.value.zoomControl.remove()
   L.control.zoom({ position: 'bottomright' }).addTo(map.value)
