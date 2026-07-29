@@ -21,6 +21,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  zoom: {
+    type: [Number, String],
+    default: 13,
+  },
 })
 
 const emit = defineEmits(['coordinates-changed'])
@@ -30,6 +34,14 @@ const map = ref(null)
 const marker = ref(null)
 const originalPosition = ref(null)
 const mouseCoords = ref(null)
+
+// Vue's prop default only covers undefined, but Statamic hands over an unset
+// integer as null. Zoom 0 is a valid Leaflet level, so it must survive the check.
+const zoomLevel = computed(() => {
+  const zoom = Number(props.zoom)
+
+  return props.zoom === null || props.zoom === '' || !Number.isFinite(zoom) ? 13 : zoom
+})
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
 const colorMode = computed(() => Statamic.$colorMode.mode.value)
@@ -49,7 +61,7 @@ function initializeMap() {
     return
   }
 
-  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], 13)
+  map.value = L.map(mapContainer.value).setView([parseFloat(lat), parseFloat(lon)], zoomLevel.value)
 
   map.value.zoomControl.remove()
   L.control.zoom({ position: 'bottomright' }).addTo(map.value)
