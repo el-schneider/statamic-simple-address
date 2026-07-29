@@ -21,9 +21,11 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // null, not 13: an unset Statamic integer arrives as null, so the fallback
+  // has to live in zoomLevel anyway. Keeping it in one place.
   zoom: {
     type: [Number, String],
-    default: 13,
+    default: null,
   },
 })
 
@@ -35,12 +37,11 @@ const marker = ref(null)
 const originalPosition = ref(null)
 const mouseCoords = ref(null)
 
-// Vue's prop default only covers undefined, but Statamic hands over an unset
-// integer as null. Zoom 0 is a valid Leaflet level, so it must survive the check.
+// parseFloat, not Number: Number(null) is 0 and zoom 0 is a valid Leaflet level.
 const zoomLevel = computed(() => {
-  const zoom = Number(props.zoom)
+  const zoom = parseFloat(props.zoom)
 
-  return props.zoom === null || props.zoom === '' || !Number.isFinite(zoom) ? 13 : zoom
+  return Number.isNaN(zoom) ? 13 : zoom
 })
 
 const formattedYaml = computed(() => formatAsYaml(props.address))
