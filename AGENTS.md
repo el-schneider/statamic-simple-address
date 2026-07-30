@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 ## Project Overview
 
@@ -11,10 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Code Quality
 
 ```bash
-prettier --check .
-prettier --write .
-./vendor/bin/pint --test
-./vendor/bin/pint
+npm run check   # prettier --check, eslint, pint --test
+npm run fix     # the same three, writing
 ```
 
 ### Testing
@@ -24,22 +22,13 @@ prettier --write .
 ./vendor/bin/pest --filter=SomeTest
 ```
 
-### Integration Testing with Live App
+CI runs `pest --ci --exclude-group=browser`. Everything under `tests/Browser/` is in that group, so those tests never run in CI.
 
-A full Laravel test app is available at `../statamic-simple-address-v6` and can be accessed at `http://statamic-simple-address-v6.test`.
+### Integration Testing
 
-**Credentials:**
-
-- Email: `agent@agent.md`
-- Password: `agent`
-- Login URL: `http://statamic-simple-address-v6.test/cp`
-- Test Page URL: `http://statamic-simple-address-v6.test/cp/collections/pages/entries/4e8a2abf-764e-4001-b57f-2de19029f358`
-
-For programmatic testing, use your agent-browser skill or curl with session cookies.
-
-See logs at `../statamic-simple-address-v6/storage/logs/laravel.log` when debugging.
+Verifying fieldtype changes in a browser needs a Statamic app with this addon installed as a path repository. Build the assets, publish them into the app (`vendor:publish --tag=statamic-simple-address --force`), and check the control panel.
 
 ## Off-Limits Files
 
-- **`resources/dist/`** - Built by CI. Do NOT run `npm run build`.
-- **`CHANGELOG.md`** - Updated by CI on release. Do NOT edit.
+- **`resources/dist/`** — Built by CI on push to `main`. Do NOT commit build output.
+- **`CHANGELOG.md`** — Updated by CI on release. Do NOT edit.
