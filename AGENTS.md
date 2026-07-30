@@ -28,7 +28,7 @@ Verifying fieldtype changes in a browser needs a Statamic app with this addon in
 
 - Comments say why, not what changed. History belongs in the PR.
 - UI changes: verify in a real browser (agent-browser, Chrome DevTools) and say what you checked. No browser automation available — ask, don't guess.
-- Add nothing you can derive or reuse. Existing helper, then Leaflet or Statamic UI, then new code. A new dependency needs a reason.
+- Add nothing you can derive or reuse.
 - Fix the cause, not the reported symptom.
 - No abstraction with a single caller.
 - Let failures surface. No try/catch for tidiness.
