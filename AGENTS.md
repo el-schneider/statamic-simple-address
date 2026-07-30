@@ -1,7 +1,3 @@
-# AGENTS.md
-
-This file provides guidance to coding agents when working with code in this repository.
-
 ## Project Overview
 
 **Statamic Simple Address**. A simple address autocomplete fieldtype for Statamic v6. Works out of the box with Nominatim (OpenStreetMap) and supports 30+ geocoding providers via geocoder-php.
@@ -27,6 +23,15 @@ CI runs `pest --ci --exclude-group=browser`. Everything under `tests/Browser/` i
 ### Integration Testing
 
 Verifying fieldtype changes in a browser needs a Statamic app with this addon installed as a path repository. Build the assets, publish them into the app (`vendor:publish --tag=statamic-simple-address --force`), and check the control panel.
+
+## Contributing
+
+- Comments say why, not what changed. History belongs in the PR.
+- UI changes: verify in a real browser (agent-browser, Chrome DevTools) and say what you checked. No browser automation available — ask, don't guess.
+- Add nothing you can derive or reuse. Existing helper, then Leaflet or Statamic UI, then new code. A new dependency needs a reason.
+- Fix the cause, not the reported symptom.
+- No abstraction with a single caller.
+- Let failures surface. No try/catch for tidiness.
 
 ## Off-Limits Files
 
