@@ -98,6 +98,32 @@ function initializeMap() {
   map.value.invalidateSize()
 }
 
+// Keep the map in step with the address without rebuilding it. A marker the user
+// dragged stays within the current view, so its zoom and center are left alone;
+// only an address that lands off-screen (a fresh search) recenters at the
+// configured zoom.
+function syncToAddress() {
+  const { lat, lon } = props.address
+
+  if (!lat || !lon) {
+    return
+  }
+
+  if (!map.value) {
+    initializeMap()
+    return
+  }
+
+  const target = [parseFloat(lat), parseFloat(lon)]
+
+  marker.value.setLatLng(target)
+  originalPosition.value = target
+
+  if (!map.value.getBounds().contains(target)) {
+    map.value.setView(target, zoomLevel.value)
+  }
+}
+
 function onMarkerDragEnd() {
   const newLatLng = marker.value.getLatLng()
   emit('coordinates-changed', {
@@ -139,11 +165,7 @@ defineExpose({
   revertMarkerPosition,
 })
 
-watch(
-  () => props.address,
-  () => initializeMap(),
-  { deep: true },
-)
+watch(() => props.address, syncToAddress, { deep: true })
 
 watch(
   () => colorMode.value,
