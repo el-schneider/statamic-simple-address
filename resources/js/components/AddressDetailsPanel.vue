@@ -37,6 +37,11 @@ const marker = ref(null)
 const originalPosition = ref(null)
 const mouseCoords = ref(null)
 
+// Set from the moment the user drags the marker until the resulting address
+// update arrives. It lets syncToAddress tell a marker refinement (keep the
+// current view) apart from a freshly selected place (recenter at the zoom).
+const awaitingDragEcho = ref(false)
+
 // parseFloat, not Number: Number(null) is 0 and zoom 0 is a valid Leaflet level.
 const zoomLevel = computed(() => {
   const zoom = parseFloat(props.zoom)
@@ -119,12 +124,21 @@ function syncToAddress() {
   marker.value.setLatLng(target)
   originalPosition.value = target
 
-  if (!map.value.getBounds().contains(target)) {
-    map.value.setView(target, zoomLevel.value)
+  // A dragged marker: the user is already looking at the right spot, so keep
+  // their zoom and center. Any other change is a newly selected place, which
+  // recenters at the configured zoom.
+  if (awaitingDragEcho.value) {
+    awaitingDragEcho.value = false
+
+    return
   }
+
+  map.value.setView(target, zoomLevel.value)
 }
 
 function onMarkerDragEnd() {
+  awaitingDragEcho.value = true
+
   const newLatLng = marker.value.getLatLng()
   emit('coordinates-changed', {
     lat: parseFloat(newLatLng.lat).toFixed(7),
@@ -133,6 +147,10 @@ function onMarkerDragEnd() {
 }
 
 function revertMarkerPosition() {
+  // The reverse lookup failed, so no address update will follow; clear the flag
+  // so the next real selection still recenters.
+  awaitingDragEcho.value = false
+
   if (marker.value && originalPosition.value) {
     marker.value.setLatLng(originalPosition.value)
   }
