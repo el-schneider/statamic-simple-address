@@ -151,7 +151,9 @@ async function onCoordinatesChanged({ lat, lon }) {
 
     const results = response.data.results || []
     if (results.length > 0) {
-      update(results[0])
+      // The lookup describes the nearest known place, but the point the user
+      // dropped is the one they meant. Keep their coordinates, take the label.
+      update({ ...results[0], lat, lon })
       $toast?.success(__('Address updated from map'))
     } else {
       update({ ...props.value, lat, lon })

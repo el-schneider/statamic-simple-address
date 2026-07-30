@@ -98,6 +98,35 @@ function initializeMap() {
   map.value.invalidateSize()
 }
 
+// Rebuilding the map on every address change reset the zoom while the user was
+// still working. Move the marker instead, and recenter only when the address
+// points somewhere the marker is not already sitting, which is any change other
+// than the echo of a drag.
+function syncToAddress() {
+  const { lat, lon } = props.address
+
+  if (!lat || !lon) {
+    return
+  }
+
+  if (!map.value) {
+    initializeMap()
+    return
+  }
+
+  const target = [parseFloat(lat), parseFloat(lon)]
+  // Coordinates round-trip through toFixed(7), so compare with a tolerance of
+  // roughly 10 cm rather than exactly.
+  const moved = !marker.value.getLatLng().equals(target, 1e-6)
+
+  marker.value.setLatLng(target)
+  originalPosition.value = target
+
+  if (moved) {
+    map.value.setView(target, zoomLevel.value)
+  }
+}
+
 function onMarkerDragEnd() {
   const newLatLng = marker.value.getLatLng()
   emit('coordinates-changed', {
@@ -139,11 +168,7 @@ defineExpose({
   revertMarkerPosition,
 })
 
-watch(
-  () => props.address,
-  () => initializeMap(),
-  { deep: true },
-)
+watch(() => props.address, syncToAddress, { deep: true })
 
 watch(
   () => colorMode.value,
