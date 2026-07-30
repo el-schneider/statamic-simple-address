@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.2.1 - 2026-07-30
+
+### What's fixed
+
+- **Map view survives a marker drag** — dragging the pin no longer resets the zoom and center.
+- **The dropped point is the saved point** — a drag no longer snaps the marker to the nearest matched place.
+
+Thanks to @eugene-karuna for reporting and diagnosing this in #24.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.2.0...v2.2.1
+
 ## v2.2.0 - 2026-07-29
 
 ### What's new
