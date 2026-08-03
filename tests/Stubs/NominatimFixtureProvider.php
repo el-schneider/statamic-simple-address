@@ -17,6 +17,18 @@ use GuzzleHttp\Psr7\Response;
 /**
  * Runs recorded Nominatim responses through the real provider, so tests cover the
  * actual parsing instead of a hand-built model.
+ *
+ * The fixtures are frozen on purpose: they pin response shapes, not the state of
+ * OpenStreetMap, and a peak that gets retagged tomorrow must not turn a label test red.
+ * Re-record one only to cover a new shape, or when Nominatim's own format moves:
+ *
+ *   curl -A "statamic-simple-address tests" -o tests/__fixtures__/nominatim/<name>.json \
+ *     --get "https://nominatim.openstreetmap.org/search" \
+ *     -d format=jsonv2 -d addressdetails=1 -d limit=1 \
+ *     --data-urlencode "q=<query>" --data-urlencode "accept-language=<locale>"
+ *
+ * Files prefixed `reverse-` come from the /reverse endpoint instead, with lat/lon and
+ * zoom=18 in place of q. Expected labels then have to be updated by hand.
  */
 class NominatimFixtureProvider implements Provider
 {

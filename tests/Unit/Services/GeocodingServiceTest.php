@@ -111,6 +111,17 @@ test('that the cache key covers the locale the provider is actually asked for', 
         ->and($store->all())->toHaveCount(2);
 });
 
+test('that the cache key covers the country filter', function () {
+    [$service, $store] = serviceWithRestrictedCache('search-peak');
+
+    $service->geocode(GeocodeQuery::create('Berlin'));
+    $service->geocode(GeocodeQuery::create('Berlin')->withData('countrycodes', ['de']));
+    $service->geocode(GeocodeQuery::create('Berlin')->withData('countrycodes', ['us']));
+
+    expect(NominatimFixtureProvider::$calls)->toBe(3)
+        ->and($store->all())->toHaveCount(3);
+});
+
 test('that switching provider does not serve the previous provider results', function () {
     [$service, $store] = serviceWithRestrictedCache('search-peak');
     $service->geocode(GeocodeQuery::create('Matterhorn'));
