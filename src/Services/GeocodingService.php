@@ -2,43 +2,92 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Services;
 
-use Geocoder\Provider\Cache\ProviderCache;
+use Closure;
+use ElSchneider\StatamicSimpleAddress\Support\LocationPayload;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Geocoder\StatefulGeocoder;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class GeocodingService
 {
+    private const DEFAULT_LOCALE = 'en';
+
+    /**
+     * Bump whenever the payload shape changes. Cached entries outlive addon upgrades:
+     * the default duration is roughly four months.
+     */
+    private const CACHE_VERSION = 'v1';
+
     private StatefulGeocoder $geocoder;
 
     public function __construct()
     {
-        $provider = $this->buildProvider();
+        $this->geocoder = new StatefulGeocoder($this->buildProvider(), self::DEFAULT_LOCALE);
+    }
 
-        // Wrap with caching if enabled
-        if (config('simple-address.cache.enabled')) {
-            $provider = new ProviderCache(
-                $provider,
-                new SerializableGeocoderCache(app('cache')->store(config('simple-address.cache.store'))),
-                config('simple-address.cache.duration')
-            );
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function geocode(GeocodeQuery $query): array
+    {
+        $query = $this->withResolvedLocale($query);
+
+        return $this->remember($query, fn () => $this->geocoder->geocodeQuery($query)->all());
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function reverse(ReverseQuery $query): array
+    {
+        $query = $this->withResolvedLocale($query);
+
+        return $this->remember($query, fn () => $this->geocoder->reverseQuery($query)->all());
+    }
+
+    /**
+     * Cache the mapped payload rather than the provider's result objects. Nothing has to
+     * be rebuilt on a cache hit, so nothing can be lost on the way, and the cache only
+     * ever holds plain data — which is all Laravel will unserialize back.
+     */
+    private function remember(GeocodeQuery|ReverseQuery $query, Closure $lookup): array
+    {
+        $payload = fn () => array_map(LocationPayload::fromLocation(...), $lookup());
+
+        if (! config('simple-address.cache.enabled')) {
+            return $payload();
         }
 
-        $this->geocoder = new StatefulGeocoder($provider, 'en');
+        return Cache::store(config('simple-address.cache.store'))->remember(
+            $this->cacheKey($query),
+            config('simple-address.cache.duration'),
+            $payload
+        );
     }
 
-    public function geocode(GeocodeQuery $query)
+    private function cacheKey(GeocodeQuery|ReverseQuery $query): string
     {
-        return $this->geocoder->geocodeQuery($query)->all();
+        return sprintf(
+            'simple-address.%s.%s.%s',
+            self::CACHE_VERSION,
+            config('simple-address.provider'),
+            sha1((string) $query)
+        );
     }
 
-    public function reverse(ReverseQuery $query)
+    /**
+     * StatefulGeocoder fills in the default locale itself, but only after the query has
+     * been handed to it — too late for a cache key that has to describe the real request.
+     * Empty counts as unset there, so it has to count as unset here too.
+     */
+    private function withResolvedLocale(GeocodeQuery|ReverseQuery $query): GeocodeQuery|ReverseQuery
     {
-        return $this->geocoder->reverseQuery($query)->all();
+        return $query->withLocale($query->getLocale() ?: self::DEFAULT_LOCALE);
     }
 
     private function buildProvider()

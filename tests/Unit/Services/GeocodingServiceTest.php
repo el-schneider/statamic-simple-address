@@ -2,12 +2,37 @@
 
 use ElSchneider\StatamicSimpleAddress\ServiceProvider;
 use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
-use ElSchneider\StatamicSimpleAddress\Services\SerializableGeocoderCache;
-use Geocoder\Model\AddressCollection;
-use Geocoder\Provider\Cache\ProviderCache;
+use Geocoder\Model\Coordinates;
 use Geocoder\Query\GeocodeQuery;
-use Tests\Stubs\GoogleLikeProvider;
-use Tests\Stubs\RestrictedUnserializeCache;
+use Geocoder\Query\ReverseQuery;
+use Tests\Stubs\NominatimFixtureProvider;
+use Tests\Stubs\RestrictedUnserializeStore;
+
+/**
+ * Point the service at recorded Nominatim responses, cached through a store that only
+ * hands back plain data — Laravel 13's `serializable_classes = false`.
+ */
+function serviceWithRestrictedCache(string $fixture): array
+{
+    NominatimFixtureProvider::$fixture = $fixture;
+    NominatimFixtureProvider::$calls = 0;
+
+    $store = new RestrictedUnserializeStore;
+
+    config([
+        'simple-address.provider' => 'nominatim_fixture',
+        'simple-address.providers.nominatim_fixture' => ['class' => NominatimFixtureProvider::class],
+        'simple-address.cache.enabled' => true,
+        'simple-address.cache.store' => 'restricted_unserialize',
+        'cache.stores.restricted_unserialize' => ['driver' => 'restricted_unserialize'],
+    ]);
+
+    app('cache')->extend('restricted_unserialize', fn ($app) => $app['cache']->repository($store));
+    app('cache')->forgetDriver('restricted_unserialize');
+    app()->forgetInstance(GeocodingService::class);
+
+    return [new GeocodingService, $store];
+}
 
 test('that an error is thrown if the provider is not configured', function () {
     config(['simple-address.provider' => 'nonexistent']);
@@ -45,45 +70,55 @@ test('that the geocoding service is bound as singleton', function () {
     expect($service1)->toBe($service2);
 });
 
-test('geocoder cache stores scalar arrays that survive restricted unserialization', function () {
-    GoogleLikeProvider::$calls = 0;
-    $cache = new RestrictedUnserializeCache;
-    $provider = new ProviderCache(new GoogleLikeProvider, new SerializableGeocoderCache($cache), 3600);
-    $query = GeocodeQuery::create('Holzmarkt 1, Tübingen');
+test('that a cached result is identical to a fresh one', function () {
+    [$service, $store] = serviceWithRestrictedCache('search-peak');
 
-    $first = $provider->geocodeQuery($query);
-    $second = $provider->geocodeQuery($query);
+    $fresh = $service->geocode(GeocodeQuery::create('Matterhorn'));
+    $cached = $service->geocode(GeocodeQuery::create('Matterhorn'));
 
-    expect(GoogleLikeProvider::$calls)->toBe(1)
-        ->and($first)->toBeInstanceOf(AddressCollection::class)
-        ->and($second)->toBeInstanceOf(AddressCollection::class)
-        ->and($second->first()->getProvidedBy())->toBe('google_maps')
-        ->and($second->first()->getLocality())->toBe('Tübingen')
-        ->and(implode('', $cache->items))->not->toContain('Geocoder\\Model');
+    expect(NominatimFixtureProvider::$calls)->toBe(1)
+        ->and($cached)->toBe($fresh)
+        ->and($cached[0]['label'])->toBe('Matterhorn, Zermatt, Wallis, Schweiz')
+        ->and($store->serialized())->not->toContain('Geocoder\\');
 });
 
-test('geocoding service uses safe cache with google-like provider when object serialization is restricted', function () {
-    GoogleLikeProvider::$calls = 0;
+test('that a cached reverse result is identical to a fresh one', function () {
+    [$service, $store] = serviceWithRestrictedCache('reverse-poi');
 
-    config([
-        'simple-address.provider' => 'google_like',
-        'simple-address.providers.google_like' => [
-            'class' => GoogleLikeProvider::class,
-        ],
-        'simple-address.cache.enabled' => true,
-        'simple-address.cache.store' => 'restricted_unserialize',
-        'cache.stores.restricted_unserialize' => ['driver' => 'restricted_unserialize'],
-    ]);
+    $query = ReverseQuery::create(new Coordinates(45.9764263, 7.6586024));
+    $fresh = $service->reverse($query);
+    $cached = $service->reverse($query);
 
-    app('cache')->extend('restricted_unserialize', fn () => new RestrictedUnserializeCache);
-    app()->forgetInstance(GeocodingService::class);
+    expect(NominatimFixtureProvider::$calls)->toBe(1)
+        ->and($cached)->toBe($fresh)
+        ->and($cached[0]['label'])->toBe('Heiliger Bernhard, Obre Stafel, Zermatt, Wallis, Schweiz')
+        ->and($store->serialized())->not->toContain('Geocoder\\');
+});
 
-    $service = new GeocodingService;
+test('that the cache key covers the locale the provider is actually asked for', function () {
+    [$service, $store] = serviceWithRestrictedCache('search-peak');
 
-    $first = $service->geocode(GeocodeQuery::create('Holzmarkt 1, Tübingen'));
-    $second = $service->geocode(GeocodeQuery::create('Holzmarkt 1, Tübingen'));
+    // No locale set, so the service default applies. An explicit default hits the same
+    // entry, and so does an empty one, which the geocoder treats as unset. A different
+    // language must not.
+    $service->geocode(GeocodeQuery::create('Matterhorn'));
+    $service->geocode(GeocodeQuery::create('Matterhorn')->withLocale('en'));
+    $service->geocode(GeocodeQuery::create('Matterhorn')->withLocale(''));
+    expect(NominatimFixtureProvider::$calls)->toBe(1);
 
-    expect(GoogleLikeProvider::$calls)->toBe(1)
-        ->and($first[0]->getProvidedBy())->toBe('google_maps')
-        ->and($second[0]->getLocality())->toBe('Tübingen');
+    $service->geocode(GeocodeQuery::create('Matterhorn')->withLocale('de'));
+    expect(NominatimFixtureProvider::$calls)->toBe(2)
+        ->and($store->all())->toHaveCount(2);
+});
+
+test('that switching provider does not serve the previous provider results', function () {
+    [$service, $store] = serviceWithRestrictedCache('search-peak');
+    $service->geocode(GeocodeQuery::create('Matterhorn'));
+
+    config(['simple-address.provider' => 'other_fixture']);
+    config(['simple-address.providers.other_fixture' => ['class' => NominatimFixtureProvider::class]]);
+    (new GeocodingService)->geocode(GeocodeQuery::create('Matterhorn'));
+
+    expect(NominatimFixtureProvider::$calls)->toBe(2)
+        ->and($store->all())->toHaveCount(2);
 });

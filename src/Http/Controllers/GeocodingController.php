@@ -2,13 +2,13 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
-use ElSchneider\StatamicSimpleAddress\Http\Resources\AddressResource;
 use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
 use Geocoder\Model\Coordinates;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 class GeocodingController
@@ -34,10 +34,10 @@ class GeocodingController
                 $geocodeQuery = $geocodeQuery->withLocale($language);
             }
 
-            $addressResults = $this->geocodingService->geocode($geocodeQuery);
+            $results = $this->geocodingService->geocode($geocodeQuery);
 
             return response()->json([
-                'results' => AddressResource::collection($addressResults)->resolve($request),
+                'results' => $this->present($results, $request),
             ]);
         } catch (\Exception $e) {
             return $this->handleGeocodingError($e);
@@ -58,14 +58,36 @@ class GeocodingController
                 $reverseQuery = $reverseQuery->withLocale($language);
             }
 
-            $addressResults = $this->geocodingService->reverse($reverseQuery);
+            $results = $this->geocodingService->reverse($reverseQuery);
 
             return response()->json([
-                'results' => AddressResource::collection($addressResults)->resolve($request),
+                'results' => $this->present($results, $request),
             ]);
         } catch (\Exception $e) {
             return $this->handleGeocodingError($e);
         }
+    }
+
+    /**
+     * Apply the per-request shaping the cached payload deliberately leaves out.
+     *
+     * @param  array<int, array<string, mixed>>  $results
+     * @return array<int, array<string, mixed>>
+     */
+    private function present(array $results, Request $request): array
+    {
+        $exclude = $request->input('exclude_fields', []);
+
+        return array_map(function (array $result) use ($exclude) {
+            $result = Arr::except($result, $exclude);
+
+            // adminLevels is keyed by level; cast so JSON keeps it an object, not a list.
+            if (isset($result['adminLevels'])) {
+                $result['adminLevels'] = (object) $result['adminLevels'];
+            }
+
+            return $result;
+        }, $results);
     }
 
     /**

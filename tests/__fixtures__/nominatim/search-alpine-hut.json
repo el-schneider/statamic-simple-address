@@ -1,0 +1,29 @@
+[
+  {
+    "place_id": 70360377,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 7884886401,
+    "lat": "47.0245254",
+    "lon": "11.8129045",
+    "category": "tourism",
+    "type": "alpine_hut",
+    "place_rank": 30,
+    "importance": 0.2432038182346074,
+    "addresstype": "tourism",
+    "name": "Berliner Hütte",
+    "display_name": "Berliner Hütte, Zemmgrund, Mayrhofen, Bezirk Schwaz, Tirol, 6295, Österreich",
+    "address": {
+      "tourism": "Berliner Hütte",
+      "road": "Zemmgrund",
+      "town": "Mayrhofen",
+      "county": "Bezirk Schwaz",
+      "state": "Tirol",
+      "ISO3166-2-lvl4": "AT-7",
+      "postcode": "6295",
+      "country": "Österreich",
+      "country_code": "at"
+    },
+    "boundingbox": ["47.0244754", "47.0245754", "11.8128545", "11.8129545"]
+  }
+]

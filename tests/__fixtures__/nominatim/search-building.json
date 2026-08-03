@@ -1,0 +1,30 @@
+[
+  {
+    "place_id": 122337663,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 260329085,
+    "lat": "48.5205237",
+    "lon": "9.0555803",
+    "category": "building",
+    "type": "apartments",
+    "place_rank": 30,
+    "importance": 6.895017929346177e-5,
+    "addresstype": "building",
+    "name": "",
+    "display_name": "1, Holzmarkt, Altstadt, Zentrum, Tübingen, Landkreis Tübingen, Baden-Württemberg, 72070, Deutschland",
+    "address": {
+      "house_number": "1",
+      "road": "Holzmarkt",
+      "neighbourhood": "Altstadt",
+      "town": "Tübingen",
+      "county": "Landkreis Tübingen",
+      "state": "Baden-Württemberg",
+      "ISO3166-2-lvl4": "DE-BW",
+      "postcode": "72070",
+      "country": "Deutschland",
+      "country_code": "de"
+    },
+    "boundingbox": ["48.5204203", "48.5206941", "9.0554347", "9.0556846"]
+  }
+]
