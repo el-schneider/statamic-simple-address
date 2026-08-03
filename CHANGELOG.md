@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.2.2 - 2026-08-03
+
+### What's fixed
+
+- **Places keep their own name** — peaks, huts and hotels were labelled after their surroundings, and some results came back blank and unselectable. Labels now come from the geocoder itself.
+- **Cached results match fresh ones** — provider details were dropped on the way through the cache. Mapbox lost its street name on every cache hit.
+- **Long labels stay on one line** — suggestions truncate instead of wrapping, and the dropdown no longer overhangs the field.
+
+Nominatim labels are longer than before and include the postcode. Saved values are untouched, only new selections change.
+
+Thanks to @eugene-karuna for reporting and diagnosing this in #26.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.2.1...v2.2.2
+
 ## v2.2.1 - 2026-07-30
 
 ### What's fixed
