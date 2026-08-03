@@ -2,13 +2,16 @@
 
 namespace ElSchneider\StatamicSimpleAddress\Http\Controllers;
 
-use ElSchneider\StatamicSimpleAddress\Http\Resources\AddressResource;
+use Closure;
 use ElSchneider\StatamicSimpleAddress\Services\GeocodingService;
+use ElSchneider\StatamicSimpleAddress\Support\LocationPayload;
 use Geocoder\Model\Coordinates;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class GeocodingController
@@ -34,10 +37,10 @@ class GeocodingController
                 $geocodeQuery = $geocodeQuery->withLocale($language);
             }
 
-            $addressResults = $this->geocodingService->geocode($geocodeQuery);
-
             return response()->json([
-                'results' => AddressResource::collection($addressResults)->resolve($request),
+                'results' => $this->cached($request, fn () => $this->present(
+                    $this->geocodingService->geocode($geocodeQuery), $request
+                )),
             ]);
         } catch (\Exception $e) {
             return $this->handleGeocodingError($e);
@@ -58,14 +61,51 @@ class GeocodingController
                 $reverseQuery = $reverseQuery->withLocale($language);
             }
 
-            $addressResults = $this->geocodingService->reverse($reverseQuery);
-
             return response()->json([
-                'results' => AddressResource::collection($addressResults)->resolve($request),
+                'results' => $this->cached($request, fn () => $this->present(
+                    $this->geocodingService->reverse($reverseQuery), $request
+                )),
             ]);
         } catch (\Exception $e) {
             return $this->handleGeocodingError($e);
         }
+    }
+
+    private function present(array $locations, Request $request): array
+    {
+        $exclude = $request->input('exclude_fields', []);
+
+        return array_map(
+            fn ($location) => Arr::except(LocationPayload::fromLocation($location), $exclude),
+            $locations
+        );
+    }
+
+    /**
+     * Cached values have to be plain data: under `serializable_classes = false` Laravel
+     * returns nothing else, and a geocoder result cannot be rebuilt from it.
+     *
+     * The key reads parsed input rather than the raw body, which a form-encoded post
+     * leaves empty.
+     */
+    private function cached(Request $request, Closure $lookup): array
+    {
+        if (! config('simple-address.cache.enabled')) {
+            return $lookup();
+        }
+
+        $input = $request->all();
+        ksort($input);
+
+        $key = sprintf(
+            'simple-address.%s.%s.%s',
+            config('simple-address.provider'),
+            $request->path(),
+            sha1(json_encode($input))
+        );
+
+        return Cache::store(config('simple-address.cache.store'))
+            ->remember($key, config('simple-address.cache.duration'), $lookup);
     }
 
     /**

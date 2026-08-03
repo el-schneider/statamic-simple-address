@@ -17,8 +17,19 @@ use Geocoder\Query\ReverseQuery;
  */
 class StubProvider implements Provider
 {
+    /** Set to return a provider-specific model instead of the default fixture. */
+    public static ?\Geocoder\Location $result = null;
+
+    public static int $calls = 0;
+
     public function geocodeQuery(GeocodeQuery $query): Collection
     {
+        self::$calls++;
+
+        if (self::$result) {
+            return new AddressCollection([self::$result]);
+        }
+
         // Return a single fixture address matching the common test query
         $address = new Address(
             providedBy: 'stub',
@@ -36,6 +47,12 @@ class StubProvider implements Provider
 
     public function reverseQuery(ReverseQuery $query): Collection
     {
+        self::$calls++;
+
+        if (self::$result) {
+            return new AddressCollection([self::$result]);
+        }
+
         // Return the same fixture for reverse queries
         $address = new Address(
             providedBy: 'stub',
