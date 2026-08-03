@@ -71,10 +71,6 @@ class GeocodingController
         }
     }
 
-    /**
-     * @param  array<int, \Geocoder\Location>  $locations
-     * @return array<int, array<string, mixed>>
-     */
     private function present(array $locations, Request $request): array
     {
         $exclude = $request->input('exclude_fields', []);
@@ -86,17 +82,12 @@ class GeocodingController
     }
 
     /**
-     * Cache the finished response rather than the provider's result objects.
+     * Cache the finished response, not the provider's objects: those cannot be rebuilt
+     * from plain data, and plain data is all Laravel returns under
+     * `serializable_classes = false`.
      *
-     * Those objects cannot be rebuilt from plain data: the shared model has no room for
-     * what each provider adds, so a cached hit used to come back stripped of it. Caching
-     * the answer instead means nothing has to be rebuilt, and the cache holds plain data
-     * only — which is all Laravel hands back under `serializable_classes = false`.
-     *
-     * The request input is the entire question: text or coordinates, countries, language,
-     * excluded fields. Same question, same answer, so it is the key. Read the parsed
-     * input rather than the raw body, which is empty for a form-encoded post and would
-     * collapse every query onto one entry.
+     * Read the parsed input, not the raw body — that is empty for a form-encoded post
+     * and would collapse every query onto one entry.
      */
     private function cached(Request $request, Closure $lookup): array
     {
@@ -110,8 +101,9 @@ class GeocodingController
         ksort($input);
 
         $key = sprintf(
-            'simple-address.%s.%s',
+            'simple-address.%s.%s.%s',
             config('simple-address.provider'),
+            $request->path(),
             sha1(json_encode($input))
         );
 

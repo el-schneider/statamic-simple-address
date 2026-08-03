@@ -27,7 +27,6 @@ test('that a cached response is identical to a fresh one', function () {
     expect(StubProvider::$calls)->toBe(1)
         ->and($cached)->toBe($fresh)
         ->and($cached[0]['label'])->toBe('Matterhorn, Zermatt, Valais, Switzerland')
-        // The provider model never reaches the cache, so nothing of it can be lost.
         ->and($this->store->serialized())->not->toContain('Geocoder\\');
 });
 
@@ -40,6 +39,15 @@ test('that a cached reverse response is identical to a fresh one', function () {
     expect(StubProvider::$calls)->toBe(1)
         ->and($cached)->toBe($fresh)
         ->and($cached[0]['label'])->toBe('Matterhorn, Zermatt, Valais, Switzerland');
+});
+
+test('that search and reverse do not share an entry', function () {
+    $body = ['query' => 'Matterhorn', 'lat' => 45.9764263, 'lon' => 7.6586024];
+
+    $this->post('/cp/simple-address/search', $body);
+    $this->post('/cp/simple-address/reverse', $body);
+
+    expect(StubProvider::$calls)->toBe(2);
 });
 
 test('that a different question is a different cache entry', function () {

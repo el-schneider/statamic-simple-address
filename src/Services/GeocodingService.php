@@ -16,7 +16,6 @@ class GeocodingService
 
     public function __construct()
     {
-        // Caching happens a layer up, on the finished response, not on provider objects.
         $this->geocoder = new StatefulGeocoder($this->buildProvider(), 'en');
     }
 
