@@ -10,9 +10,7 @@
       @search="onSearch"
     >
       <template #option="option">
-        <div class="flex items-center">
-          <span v-text="option.label" />
-        </div>
+        <span class="simple-address-option block truncate" v-text="option.label" />
       </template>
       <template #no-options="{ searchQuery }">
         <div class="dark:text-dark-150 text-sm text-gray-700">
@@ -179,3 +177,15 @@ watch(
   { immediate: true },
 )
 </script>
+
+<style>
+/* Combobox truncates the selected option, but only if the flex item may shrink. */
+.simple-address-field [data-ui-combobox-selected-option] > * {
+  min-width: 0;
+}
+
+/* Combobox sizes the dropdown to its widest option; keep it within the field. */
+[data-ui-combobox-content]:has(.simple-address-option) {
+  max-width: var(--reka-combobox-trigger-width);
+}
+</style>
