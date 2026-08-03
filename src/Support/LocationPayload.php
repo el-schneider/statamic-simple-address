@@ -9,8 +9,8 @@ use Illuminate\Support\Arr;
 /**
  * Turns a geocoder result into the plain array the field shows, caches and saves.
  *
- * Not a JsonResource on purpose: its filter() reindexes nested arrays whose keys are
- * all numeric, which would flatten adminLevels from a map keyed by level into a list.
+ * A JsonResource would break adminLevels: filter() renumbers nested arrays whose keys
+ * are all numeric, and adminLevels is keyed by level.
  */
 class LocationPayload
 {
@@ -27,11 +27,11 @@ class LocationPayload
     }
 
     /**
-     * The shared model has no field for a place's own name, so peaks, huts and hotels
-     * come out nameless. Each provider labels its own results better than we can.
+     * Location has no field for a place's own name, so a peak or a hut ends up labelled
+     * after its surroundings. Providers ship a label of their own instead.
      *
-     * Nominatim is a hard dependency and names the field differently; the rest are
-     * optional packages, so they are duck-typed.
+     * Nominatim is a required dependency and names it differently. Other providers are
+     * optional packages, so the method is probed rather than the class.
      */
     private static function providerLabel(Location $location): ?string
     {

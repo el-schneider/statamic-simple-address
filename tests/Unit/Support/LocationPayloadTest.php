@@ -8,7 +8,7 @@ use Tests\Stubs\FormattedAddressLocation;
 $base = ['providedBy' => 'test', 'latitude' => 45.97, 'longitude' => 7.65];
 
 test('that the label is the one the provider itself produced', function () use ($base) {
-    // A peak: no street, no locality. Only the provider's own label names it.
+    // A peak: no street, no locality — only the provider's label names it.
     $location = NominatimAddress::createFromArray($base + ['country' => 'Switzerland'])
         ->withDisplayName('Matterhorn, Zermatt, Valais, Switzerland');
 

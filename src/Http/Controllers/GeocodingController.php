@@ -82,12 +82,11 @@ class GeocodingController
     }
 
     /**
-     * Cache the finished response, not the provider's objects: those cannot be rebuilt
-     * from plain data, and plain data is all Laravel returns under
-     * `serializable_classes = false`.
+     * Cached values have to be plain data: under `serializable_classes = false` Laravel
+     * returns nothing else, and a geocoder result cannot be rebuilt from it.
      *
-     * Read the parsed input, not the raw body — that is empty for a form-encoded post
-     * and would collapse every query onto one entry.
+     * The key reads parsed input rather than the raw body, which a form-encoded post
+     * leaves empty.
      */
     private function cached(Request $request, Closure $lookup): array
     {
@@ -95,8 +94,6 @@ class GeocodingController
             return $lookup();
         }
 
-        // ponytail: top-level sort only, so ['ch','de'] and ['de','ch'] are two entries
-        // for one question. Normalize deeper if the duplicates ever matter.
         $input = $request->all();
         ksort($input);
 
