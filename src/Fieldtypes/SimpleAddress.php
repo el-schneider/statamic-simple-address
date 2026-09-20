@@ -68,7 +68,9 @@ class SimpleAddress extends Fieldtype
      */
     public function preload(): array
     {
-        return [];
+        return [
+            'tiles' => config('simple-address.map.tiles'),
+        ];
     }
 
     /**
