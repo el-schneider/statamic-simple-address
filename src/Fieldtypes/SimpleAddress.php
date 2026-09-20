@@ -69,8 +69,15 @@ class SimpleAddress extends Fieldtype
     public function preload(): array
     {
         return [
-            'tiles' => config('simple-address.map.tiles'),
+            'tiles' => config('simple-address.map.tiles') ?? $this->defaultTiles(),
         ];
+    }
+
+    private function defaultTiles(): array
+    {
+        $config = require __DIR__.'/../../config/simple-address.php';
+
+        return $config['map']['tiles'];
     }
 
     /**

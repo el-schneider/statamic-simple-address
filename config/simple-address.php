@@ -22,6 +22,7 @@ return [
                 ],
             ],
             'dark' => null,
+            // Set CARTO_API_KEY before enabling this example.
             // 'dark' => [
             //     'url' => 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key={key}',
             //     'options' => [
