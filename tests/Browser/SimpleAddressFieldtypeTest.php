@@ -107,6 +107,7 @@ it('lets you search and save a simple address in the control panel', function ()
                     new URL(tile.src).hostname === "tile.openstreetmap.org"
                     && tile.complete
                     && tile.naturalWidth > 0
+                    && getComputedStyle(tile).opacity === "1"
                 )) {
                     return true;
                 }
@@ -125,6 +126,7 @@ it('lets you search and save a simple address in the control panel', function ()
                     new URL(tile.src).hostname === "tile.openstreetmap.org"
                     && tile.complete
                     && tile.naturalWidth > 0
+                    && getComputedStyle(tile).opacity === "1"
                 )) {
                     return true;
                 }
