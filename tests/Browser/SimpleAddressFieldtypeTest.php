@@ -103,7 +103,11 @@ it('lets you search and save a simple address in the control panel', function ()
 
             for (let i = 0; i < 20; i++) {
                 const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
-                if (tiles.length && tiles.every((tile) => new URL(tile.src).hostname === "tile.openstreetmap.org")) {
+                if (tiles.length && tiles.every((tile) =>
+                    new URL(tile.src).hostname === "tile.openstreetmap.org"
+                    && tile.complete
+                    && tile.naturalWidth > 0
+                )) {
                     return true;
                 }
                 await delay(100);
@@ -117,7 +121,11 @@ it('lets you search and save a simple address in the control panel', function ()
 
             for (let i = 0; i < 20; i++) {
                 const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
-                if (tiles.length && tiles.every((tile) => new URL(tile.src).hostname === "tile.openstreetmap.org")) {
+                if (tiles.length && tiles.every((tile) =>
+                    new URL(tile.src).hostname === "tile.openstreetmap.org"
+                    && tile.complete
+                    && tile.naturalWidth > 0
+                )) {
                     return true;
                 }
                 await delay(100);
