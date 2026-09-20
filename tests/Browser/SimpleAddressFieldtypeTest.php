@@ -117,17 +117,25 @@ it('lets you search and save a simple address in the control panel', function ()
             return false;
         })()', true)
         ->assertScript('(async () => {
+            const previousTiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
             Statamic.$colorMode.mode.value = "dark";
             const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
             for (let i = 0; i < 20; i++) {
                 const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
-                if (tiles.length && tiles.every((tile) =>
-                    new URL(tile.src).hostname === "tile.openstreetmap.org"
-                    && tile.complete
-                    && tile.naturalWidth > 0
-                    && getComputedStyle(tile).opacity === "1"
-                )) {
+                const layerWasReplaced = tiles.length && tiles.every((tile) => !previousTiles.includes(tile));
+                const tilesAreReady = tiles.every((tile) => {
+                    const style = getComputedStyle(tile);
+
+                    return new URL(tile.src).hostname === "tile.openstreetmap.org"
+                        && tile.complete
+                        && tile.naturalWidth > 0
+                        && style.display !== "none"
+                        && style.visibility === "visible"
+                        && style.opacity === "1";
+                });
+
+                if (layerWasReplaced && tilesAreReady) {
                     return true;
                 }
                 await delay(100);
