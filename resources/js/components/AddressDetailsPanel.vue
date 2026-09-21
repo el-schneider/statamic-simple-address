@@ -21,6 +21,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  tiles: {
+    type: Object,
+    required: true,
+  },
   // null, not 13: an unset Statamic integer arrives as null, so the fallback
   // has to live in zoomLevel anyway. Keeping it in one place.
   zoom: {
@@ -154,14 +158,9 @@ function clearTileLayers(map) {
 }
 
 function createTileLayer(map) {
-  const style = colorMode.value === 'dark' ? 'dark_all' : 'light_all'
+  const layer = colorMode.value === 'dark' ? (props.tiles.dark ?? props.tiles.light) : props.tiles.light
 
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`, {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20,
-  }).addTo(map)
+  L.tileLayer(layer.url, layer.options).addTo(map)
 }
 
 defineExpose({

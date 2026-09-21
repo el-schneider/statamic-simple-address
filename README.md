@@ -64,7 +64,17 @@ php artisan vendor:publish --tag=statamic-simple-address --force
 
 If you install via Statamic's addon installer, this is typically done automatically.
 
-Works immediately with Nominatim as the default provider.
+Works immediately with Nominatim as the default geocoder and OpenStreetMap raster tiles.
+
+### Map Tiles
+
+Publish the config to customize `map.tiles.light` and `map.tiles.dark`:
+
+```bash
+php artisan vendor:publish --tag=simple-address-config
+```
+
+Each configured layer accepts a `url` template and an `options` array passed directly to Leaflet. URL placeholders can use any matching option name, including `key`, `apikey`, `access_token`, or `apiKey`. Set `dark` to `null` to reuse the light layer in dark mode. The published config includes a commented CARTO example; set its required environment variable before enabling it.
 
 ### Using a Different Provider
 

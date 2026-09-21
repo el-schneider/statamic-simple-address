@@ -34,6 +34,7 @@
       v-if="showDetails && value"
       ref="detailsPanel"
       :address="value"
+      :tiles="meta.tiles"
       :zoom="config.zoom"
       @coordinates-changed="onCoordinatesChanged"
     />

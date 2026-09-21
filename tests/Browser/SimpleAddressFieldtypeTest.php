@@ -6,6 +6,18 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\User;
 
 it('lets you search and save a simple address in the control panel', function () {
+    $tileUrl = 'data:image/svg+xml;base64,'.base64_encode(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#d1d5db"/></svg>'
+    );
+
+    config()->set('simple-address.map.tiles', [
+        'light' => [
+            'url' => $tileUrl,
+            'options' => ['maxZoom' => 20],
+        ],
+        'dark' => null,
+    ]);
+
     $user = User::make()
         ->email('admin@test.com')
         ->password('password')
@@ -96,6 +108,53 @@ it('lets you search and save a simple address in the control panel', function ()
         })()', true)
 
         ->click('internal:text="123, Main Street, London, England, United Kingdom"i')
+        ->click('internal:text="Show details"i')
+        ->assertScript('(async () => {
+            Statamic.$colorMode.mode.value = "light";
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            for (let i = 0; i < 20; i++) {
+                const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
+                if (tiles.length && tiles.every((tile) =>
+                    tile.src.startsWith("data:image/svg+xml;base64,")
+                    && tile.complete
+                    && tile.naturalWidth > 0
+                    && getComputedStyle(tile).opacity === "1"
+                )) {
+                    return true;
+                }
+                await delay(100);
+            }
+
+            return false;
+        })()', true)
+        ->assertScript('(async () => {
+            const previousTiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
+            Statamic.$colorMode.mode.value = "dark";
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            for (let i = 0; i < 20; i++) {
+                const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
+                const layerWasReplaced = tiles.length && tiles.every((tile) => !previousTiles.includes(tile));
+                const tilesAreReady = tiles.every((tile) => {
+                    const style = getComputedStyle(tile);
+
+                    return tile.src.startsWith("data:image/svg+xml;base64,")
+                        && tile.complete
+                        && tile.naturalWidth > 0
+                        && style.display !== "none"
+                        && style.visibility === "visible"
+                        && style.opacity === "1";
+                });
+
+                if (layerWasReplaced && tilesAreReady) {
+                    return true;
+                }
+                await delay(100);
+            }
+
+            return false;
+        })()', true)
         ->pressAndWaitFor('Save & Publish', 2)
         ->navigate($editUrl)
         ->assertSee('123, Main Street, London, England, United Kingdom');
