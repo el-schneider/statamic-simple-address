@@ -5,6 +5,8 @@ namespace Tests\Stubs;
 use Geocoder\Collection;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Model\AdminLevel;
+use Geocoder\Model\AdminLevelCollection;
 use Geocoder\Model\Coordinates;
 use Geocoder\Model\Country;
 use Geocoder\Provider\Provider;
@@ -59,10 +61,10 @@ class StubProvider implements Provider
         return 'stub';
     }
 
-    private function createAdminLevels(): \Geocoder\Model\AdminLevelCollection
+    private function createAdminLevels(): AdminLevelCollection
     {
-        return new \Geocoder\Model\AdminLevelCollection([
-            new \Geocoder\Model\AdminLevel(1, 'England', 'GB-ENG'),
+        return new AdminLevelCollection([
+            new AdminLevel(1, 'England', 'GB-ENG'),
         ]);
     }
 }
