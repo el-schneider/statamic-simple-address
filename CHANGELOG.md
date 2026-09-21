@@ -1,5 +1,22 @@
 # Changelog
 
+## v2.3.0 - 2026-09-21
+
+### What's fixed
+
+- Maps render without a CARTO key. The default base layer uses OpenStreetMap instead of CARTO tiles that display an API-key watermark.
+
+### What's new
+
+- Configure separate Leaflet URL templates and options under `map.tiles.light` and `map.tiles.dark`.
+- Dark CP mode reuses the light layer when no dark layer is configured.
+
+Existing published configs remain compatible. Publish the updated config only when you want to customize the tile provider.
+
+Fixes #30.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v2.2.2...v2.3.0
+
 ## v2.2.2 - 2026-08-03
 
 ### What's fixed
