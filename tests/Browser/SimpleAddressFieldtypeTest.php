@@ -6,6 +6,18 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\User;
 
 it('lets you search and save a simple address in the control panel', function () {
+    $tileUrl = 'data:image/svg+xml;base64,'.base64_encode(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#d1d5db"/></svg>'
+    );
+
+    config()->set('simple-address.map.tiles', [
+        'light' => [
+            'url' => $tileUrl,
+            'options' => ['maxZoom' => 20],
+        ],
+        'dark' => null,
+    ]);
+
     $user = User::make()
         ->email('admin@test.com')
         ->password('password')
@@ -104,7 +116,7 @@ it('lets you search and save a simple address in the control panel', function ()
             for (let i = 0; i < 20; i++) {
                 const tiles = Array.from(document.querySelectorAll("img.leaflet-tile"));
                 if (tiles.length && tiles.every((tile) =>
-                    new URL(tile.src).hostname === "tile.openstreetmap.org"
+                    tile.src.startsWith("data:image/svg+xml;base64,")
                     && tile.complete
                     && tile.naturalWidth > 0
                     && getComputedStyle(tile).opacity === "1"
@@ -127,7 +139,7 @@ it('lets you search and save a simple address in the control panel', function ()
                 const tilesAreReady = tiles.every((tile) => {
                     const style = getComputedStyle(tile);
 
-                    return new URL(tile.src).hostname === "tile.openstreetmap.org"
+                    return tile.src.startsWith("data:image/svg+xml;base64,")
                         && tile.complete
                         && tile.naturalWidth > 0
                         && style.display !== "none"
