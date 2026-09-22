@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.4 - 2026-09-22
+
+### What's fixed
+
+- Replace the default CARTO tiles with OpenStreetMap to avoid API key watermarks.
+
+### What's new
+
+- Configure provider-neutral light and dark tile layers through `config/simple-address.php`.
+- Reuse the light layer in dark mode when no separate dark layer is configured.
+- Existing published configs remain compatible.
+
+**Full Changelog**: https://github.com/el-schneider/statamic-simple-address/compare/v0.2.3...v0.2.4
+
 ## v0.2.1 - 2025-12-03
 
 ### Whats'fixed
