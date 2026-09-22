@@ -6,6 +6,7 @@ use ElSchneider\StatamicSimpleAddress\ServiceProvider;
 use Statamic\Facades\User;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
+use Tests\Stubs\StubProvider;
 
 abstract class TestCase extends AddonTestCase
 {
@@ -27,7 +28,7 @@ abstract class TestCase extends AddonTestCase
         // Use stub provider in tests to avoid external API calls
         $config['provider'] = 'stub';
         $config['providers']['stub'] = [
-            'class' => \Tests\Stubs\StubProvider::class,
+            'class' => StubProvider::class,
         ];
 
         $app['config']->set('simple-address', $config);

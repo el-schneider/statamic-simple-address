@@ -36,6 +36,7 @@
       v-if="showDetails && value"
       ref="detailsPanel"
       :address="value"
+      :tiles="meta.tiles"
       @coordinates-changed="onCoordinatesChanged"
     />
   </div>

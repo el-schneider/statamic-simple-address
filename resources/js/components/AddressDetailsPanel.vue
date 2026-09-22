@@ -45,6 +45,10 @@ export default {
       type: Object,
       required: true,
     },
+    tiles: {
+      type: Object,
+      required: true,
+    },
   },
 
   data() {
@@ -57,7 +61,26 @@ export default {
     }
   },
 
+  computed: {
+    darkMode() {
+      // Statamic 5 exposes its reactive CP color mode as a boolean. Unlike the
+      // v6 $colorMode ref, this is the API supported by the Vue 2 CP.
+      return Boolean(Statamic.darkMode)
+    },
+
+    activeTiles() {
+      return this.darkMode && this.tiles.dark ? this.tiles.dark : this.tiles.light
+    },
+  },
+
   watch: {
+    darkMode() {
+      if (this.map) {
+        this.clearTileLayers()
+        this.createTileLayer()
+      }
+    },
+
     address: {
       handler() {
         this.$nextTick(() => {
@@ -111,13 +134,7 @@ export default {
       // Initialize map
       this.map = L.map(mapContainer).setView([parseFloat(lat), parseFloat(lon)], 13)
 
-      // Add CartoDB Positron tiles (light grey style)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20,
-      }).addTo(this.map)
+      this.createTileLayer()
 
       // Add draggable marker with custom styling
       const latNum = parseFloat(lat)
@@ -174,6 +191,20 @@ export default {
       if (this.marker && this.originalPosition) {
         this.marker.setLatLng(this.originalPosition)
       }
+    },
+
+    clearTileLayers() {
+      this.map?.eachLayer((layer) => {
+        if (layer instanceof L.TileLayer) {
+          layer.remove()
+        }
+      })
+    },
+
+    createTileLayer() {
+      const { url, options } = this.activeTiles
+
+      L.tileLayer(url, options || {}).addTo(this.map)
     },
 
     formatCoord(value, type) {

@@ -54,7 +54,11 @@ countryCode: GB
 composer require el-schneider/statamic-simple-address
 ```
 
-Works immediately with Nominatim as the default provider.
+Works immediately with Nominatim as the default geocoder and OpenStreetMap raster tiles.
+
+### Map Tiles
+
+Publish the config to customize `map.tiles.light` and `map.tiles.dark`. Each layer accepts a URL template and an `options` array passed directly to Leaflet. Set `dark` to `null` to reuse the light layer in dark mode.
 
 ### Using a Different Provider
 
