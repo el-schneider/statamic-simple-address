@@ -1,5 +1,7 @@
 <?php
 
+use Geocoder\Provider\Nominatim\Nominatim;
+
 return [
     // Which provider to use by default
     'provider' => env('SIMPLE_ADDRESS_PROVIDER', 'nominatim'),
@@ -38,7 +40,7 @@ return [
     // Available providers and their configuration
     'providers' => [
         'nominatim' => [
-            'class' => \Geocoder\Provider\Nominatim\Nominatim::class,
+            'class' => Nominatim::class,
             'factory' => 'withOpenStreetMapServer',
             'args' => [
                 config('app.name', 'Statamic Simple Address'),

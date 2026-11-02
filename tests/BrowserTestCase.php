@@ -3,7 +3,10 @@
 namespace Tests;
 
 use ElSchneider\StatamicSimpleAddress\ServiceProvider;
+use Illuminate\Support\Facades\File;
+use Statamic\Facades\Blueprint;
 use Statamic\Testing\AddonTestCase;
+use Tests\Stubs\StubProvider;
 
 abstract class BrowserTestCase extends AddonTestCase
 {
@@ -24,7 +27,7 @@ abstract class BrowserTestCase extends AddonTestCase
 
     protected function tearDown(): void
     {
-        \Illuminate\Support\Facades\File::deleteDirectory($this->browserTestDirectory);
+        File::deleteDirectory($this->browserTestDirectory);
 
         parent::tearDown();
     }
@@ -46,7 +49,7 @@ abstract class BrowserTestCase extends AddonTestCase
         $app['config']->set('statamic.stache.stores.form-submissions.directory', $this->browserTestDirectory.'/content/submissions');
         $app['config']->set('statamic.stache.stores.users.directory', $this->browserTestDirectory.'/users');
 
-        \Statamic\Facades\Blueprint::setDirectory($this->browserTestDirectory.'/blueprints');
+        Blueprint::setDirectory($this->browserTestDirectory.'/blueprints');
     }
 
     protected function resolveApplicationConfiguration($app)
@@ -70,7 +73,7 @@ abstract class BrowserTestCase extends AddonTestCase
         // Use stub provider in tests to avoid external API calls
         $config['provider'] = 'stub';
         $config['providers']['stub'] = [
-            'class' => \Tests\Stubs\StubProvider::class,
+            'class' => StubProvider::class,
         ];
 
         $app['config']->set('simple-address', $config);

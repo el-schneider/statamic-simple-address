@@ -3,8 +3,11 @@
 namespace Tests\Stubs;
 
 use Geocoder\Collection;
+use Geocoder\Location;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Model\AdminLevel;
+use Geocoder\Model\AdminLevelCollection;
 use Geocoder\Model\Coordinates;
 use Geocoder\Model\Country;
 use Geocoder\Provider\Provider;
@@ -18,7 +21,7 @@ use Geocoder\Query\ReverseQuery;
 class StubProvider implements Provider
 {
     /** Set to return a provider-specific model instead of the default fixture. */
-    public static ?\Geocoder\Location $result = null;
+    public static ?Location $result = null;
 
     public static int $calls = 0;
 
@@ -76,10 +79,10 @@ class StubProvider implements Provider
         return 'stub';
     }
 
-    private function createAdminLevels(): \Geocoder\Model\AdminLevelCollection
+    private function createAdminLevels(): AdminLevelCollection
     {
-        return new \Geocoder\Model\AdminLevelCollection([
-            new \Geocoder\Model\AdminLevel(1, 'England', 'GB-ENG'),
+        return new AdminLevelCollection([
+            new AdminLevel(1, 'England', 'GB-ENG'),
         ]);
     }
 }
