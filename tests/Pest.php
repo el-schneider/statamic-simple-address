@@ -1,5 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Tests\BrowserTestCase;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,10 +16,10 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
+pest()->extend(TestCase::class)
     ->in('Unit', 'Feature');
 
-pest()->extend(Tests\BrowserTestCase::class)
+pest()->extend(BrowserTestCase::class)
     ->group('browser')
     ->beforeEach(function () {
         $statamicCpManifestPath = public_path('vendor/statamic/cp/build/manifest.json');
@@ -23,11 +28,11 @@ pest()->extend(Tests\BrowserTestCase::class)
             $source = dirname(__DIR__).'/vendor/statamic/cms/resources/dist/build';
             $target = public_path('vendor/statamic/cp/build');
 
-            \Illuminate\Support\Facades\File::ensureDirectoryExists($target);
-            \Illuminate\Support\Facades\File::copyDirectory($source, $target);
+            File::ensureDirectoryExists($target);
+            File::copyDirectory($source, $target);
         }
 
-        \Illuminate\Support\Facades\Artisan::call('vendor:publish', [
+        Artisan::call('vendor:publish', [
             '--tag' => 'statamic-simple-address',
             '--force' => true,
         ]);
