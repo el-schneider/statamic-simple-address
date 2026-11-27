@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Composer dependencies
         run: composer install --no-dev --no-interaction --prefer-dist
@@ -29,7 +29,7 @@ jobs:
         run: npm run build
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Build assets for distribution
           file_pattern: 'resources/dist/*'
